@@ -10,15 +10,24 @@ if exists('loaded_ide')
   finish
 endif
 
+<<<<<<< HEAD
+=======
+let loaded_ide = 1
+
+>>>>>>> 9443b40 (added autoload and other modifications)
 if v:version < 800
   echoerr "IDE plugin requires vim >= 8.0"
   finish
 endif
 
+<<<<<<< HEAD
 let loaded_ide = 1
 
 let g:Ide = {}
 let g:Ide.settings_ = {}
+=======
+let g:Ide = {}
+>>>>>>> 9443b40 (added autoload and other modifications)
 
 function! g:Ide.getRootpath()
   return self.rootpath_
@@ -29,6 +38,7 @@ function! g:Ide.setRootpath(...)
   let self.rootpath_ = l:abspath
 endfunction
 
+<<<<<<< HEAD
 function! g:Ide.jsonEscape(data)
   " NERDTree contains verbose formatted data
   " Unsetting the data helps to make the printing
@@ -67,6 +77,8 @@ function! g:Ide.dump(data)
   return system('echo "' . l:buf . '" | python -m json.tool')
 endfunction
 
+=======
+>>>>>>> 9443b40 (added autoload and other modifications)
 function! g:Ide.createTerminalWindow()
   :term
 endfunction
@@ -148,9 +160,24 @@ function! g:Ide.onVimQuit()
   call self.closeTerminal()
 endfunction
 
+<<<<<<< HEAD
 augroup Ide
   autocmd!
   autocmd VimEnter * :call g:Ide.setRootpath()
   autocmd VimResized * :call g:Ide.onVimResized()
   autocmd ExitPre * :call g:Ide.onVimQuit()
+=======
+function! Ide.init()
+  echom "Ide init() invoked"
+  call self.setRootpath()
+endfunction
+
+call ide#init()
+
+augroup Ide
+  autocmd!
+  autocmd VimEnter * :call Ide.init()
+  autocmd VimResized * :call Ide.onVimResized()
+  autocmd ExitPre * :call Ide.onVimQuit()
+>>>>>>> 9443b40 (added autoload and other modifications)
 augroup END
