@@ -10,24 +10,16 @@ if exists('loaded_ide')
   finish
 endif
 
-<<<<<<< HEAD
-=======
 let loaded_ide = 1
 
->>>>>>> 9443b40 (added autoload and other modifications)
 if v:version < 800
   echoerr "IDE plugin requires vim >= 8.0"
   finish
 endif
 
-<<<<<<< HEAD
 let loaded_ide = 1
 
 let g:Ide = {}
-let g:Ide.settings_ = {}
-=======
-let g:Ide = {}
->>>>>>> 9443b40 (added autoload and other modifications)
 
 function! g:Ide.getRootpath()
   return self.rootpath_
@@ -38,47 +30,6 @@ function! g:Ide.setRootpath(...)
   let self.rootpath_ = l:abspath
 endfunction
 
-<<<<<<< HEAD
-function! g:Ide.jsonEscape(data)
-  " NERDTree contains verbose formatted data
-  " Unsetting the data helps to make the printing
-  " possible without having to rely on more cleanups
-  if exists('g:NERDTree')
-    let l:data = deepcopy(a:data)
-    for p in l:data
-      for [key,val] in items(p)
-        if key == "variables"
-          for [kk, vv] in items(val)
-            if kk == "NERDTree"
-              unlet val[kk]
-            endif
-            if kk == "NERDTreeRoot"
-              unlet val[kk]
-            endif
-          endfor
-        endif
-      endfor
-    endfor
-    let l:buf = string(l:data)
-  else
-    let l:buf = string(a:data)
-  endif
-
-  let l:buf = substitute(l:buf,"function('\\([0-9]\\+\\)')",
-    \'"function(\1)"','g')
-  let l:buf = substitute(l:buf,"'",'"','g')
-  let l:buf = escape(l:buf,'"')
-  let l:buf = substitute(l:buf,"{...}",'"[{...}]"','g')
-  return l:buf
-endfunction
-
-function! g:Ide.dump(data)
-  let l:buf = self.jsonEscape(a:data)
-  return system('echo "' . l:buf . '" | python -m json.tool')
-endfunction
-
-=======
->>>>>>> 9443b40 (added autoload and other modifications)
 function! g:Ide.createTerminalWindow()
   :term
 endfunction
@@ -160,13 +111,6 @@ function! g:Ide.onVimQuit()
   call self.closeTerminal()
 endfunction
 
-<<<<<<< HEAD
-augroup Ide
-  autocmd!
-  autocmd VimEnter * :call g:Ide.setRootpath()
-  autocmd VimResized * :call g:Ide.onVimResized()
-  autocmd ExitPre * :call g:Ide.onVimQuit()
-=======
 function! Ide.init()
   echom "Ide init() invoked"
   call self.setRootpath()
@@ -179,5 +123,4 @@ augroup Ide
   autocmd VimEnter * :call Ide.init()
   autocmd VimResized * :call Ide.onVimResized()
   autocmd ExitPre * :call Ide.onVimQuit()
->>>>>>> 9443b40 (added autoload and other modifications)
 augroup END
