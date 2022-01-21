@@ -81,12 +81,14 @@ function! g:Ide.getTerminalBufNr()
   return bufnr('!'.&shell)
 endfunction
 
-function! g:Ide.getTerminalWinNr()
-  return winbufnr(self.getTerminalBufNr())
-endfunction
-
 function! g:Ide.getTerminalWinId()
-  return win_getid(self.getTerminalWinNr())
+  let l:winnrs = win_findbuf(self.getTerminalBufNr())
+  if len(l:winnrs) == 0
+    return -1
+  endif
+
+  return l:winnrs[0]
+  "return winbufnr(self.getTerminalBufNr())
 endfunction
 
 function! g:Ide.getTerminalWinHeight()
@@ -112,7 +114,7 @@ function! g:Ide.toggleTerminal()
   let l:winid = self.getTerminalWinId()
  
   " Reopen terminal buffer to a new window
-  if l:winid == 0
+  if l:winid == -1
     execute ':sbuffer ' l:bufnr
     call self.resizeTerminalWindow()
     return
@@ -124,7 +126,7 @@ endfunction
 
 function! g:Ide.closeTerminal()
   let l:winid = self.getTerminalWinId()
-  if l:winid != 0
+  if l:winid != -1
     call win_execute(l:winid,'close!')
   endif
 

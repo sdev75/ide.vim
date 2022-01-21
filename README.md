@@ -7,13 +7,21 @@ It's recommend to use VIM 8 packadd functionality.
 
 ```vim
 packadd ide
+if exists('Ide')
+  " do remapping
+endif
 ```
 
 ## Basic usage
 
 Toggle Terminal:
 ```vim
-nnoremap <leader><your_key> :call Ide.toggleTerminal()
+nnoremap <leader><key> :call Ide.toggleTerminal()<cr>
+```
+
+Toggle terminal within the terminal window itself:
+```vim
+tnoremap <leader><key> <C-w>:call Ide.toggleTerminal()<cr>
 ```
 
 ## Disclaimer
