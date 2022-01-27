@@ -38,7 +38,7 @@ function! ide#jsonEscape(data)
 endfunction
 
 function! ide#dump(data)
-  let l:buf = self.jsonEscape(a:data)
+  let l:buf = ide#jsonEscape(a:data)
   return system('echo "' . l:buf . '" | python -m json.tool')
 endfunction
 
