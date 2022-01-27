@@ -20,6 +20,7 @@ endif
 let loaded_ide = 1
 
 let g:Ide = {}
+let g:Ide.lastwinnr_ = 0
 
 function! g:Ide.getRootpath()
   return self.rootpath_
@@ -30,8 +31,16 @@ function! g:Ide.setRootpath(...)
   let self.rootpath_ = l:abspath
 endfunction
 
+function! g:Ide.setLastWinId()
+  let self.lastwinid_ = win_getid()
+endfunction
+
+function! g:Ide.getLastWinId()
+  return self.lastwinid_
+endfunction
+
 function! g:Ide.createTerminalWindow()
-  :term
+  term
 endfunction
 
 function! g:Ide.resizeTerminalWindow()
@@ -65,10 +74,10 @@ function! g:Ide.setTerminalWinHeight()
 endfunction
 
 function! g:Ide.toggleTerminal()
-
   let l:bufnr = self.getTerminalBufNr()
   if l:bufnr == -1
     " Create new Terminal window
+    call self.setLastWinId()
     call self.createTerminalWindow()
     call self.resizeTerminalWindow()
     return
@@ -78,13 +87,18 @@ function! g:Ide.toggleTerminal()
  
   " Reopen terminal buffer to a new window
   if l:winid == -1
+    call self.setLastWinId()
     execute ':sbuffer ' l:bufnr
     call self.resizeTerminalWindow()
     return
   endif
 
   " Hide terminal window, keep buffer intact
-  call win_execute(l:winid,'hide') 
+  "call win_execute(self.getLastWinId(), win_id2win(self.getLastWinId()) . ' wincmd w')
+  call win_execute(l:winid,'hide')
+  
+  " Restore last active window
+  execute win_id2win(self.getLastWinId()) . ' wincmd w'
 endfunction
 
 function! g:Ide.closeTerminal()
