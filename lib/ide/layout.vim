@@ -44,9 +44,11 @@ fun! s:Layout.openBar(idx)
   call self.bars[a:idx].open(l:bufnr)
   call self.alignBars()
   call self.resizeBars()
+  call self.openWidgets()
 endfun
 
 fun! s:Layout.closeBar(idx)
+  call self.closeWidgets()
   call self.bars[a:idx].close()
   call self.alignBars()
   call self.resizeBars()
@@ -85,6 +87,18 @@ fun! s:Layout.resizeBars()
   endfor
 endfun
 
+fun! s:Layout.openWidgets()
+  for idx in range(0, 3)
+    call self.bars[idx].openWidgets()
+  endfor
+endfun
+
+fun! s:Layout.closeWidgets()
+  for idx in range(0, 3)
+    call self.bars[idx].closeWidgets()
+  endfor
+endfun
+
 fun! s:Layout.initTerm()
   call g:IdeTerminal.init(self.id, "console")
 endfun
@@ -94,7 +108,6 @@ fun! s:Layout.cleanup()
 endfun
 
 fun! s:Layout.addWidget(pos, widget)
-  echom "adding widget"
   let l:item = get(self.map, a:pos)
   let l:idx = l:item.idx
   let l:widget = a:widget

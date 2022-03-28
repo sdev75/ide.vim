@@ -26,7 +26,10 @@ endfun
 
 fun! s:Buffer.bufnr(name, type)
   if has_key(s:map, a:name)
-    return bufnr(s:map[a:name])
+    let l:bufnr = bufnr(s:map[a:name])
+    if l:bufnr != -1
+      return l:bufnr
+    endif
   endif
   return self.create(a:name, a:type)
 endfun

@@ -34,3 +34,7 @@ fun! s:Widget.close()
     call self.callbacks['close'](self)
   endif
 endfun
+
+fun! s:Widget.getbufnr()
+  return bufnr(get(self, 'bufnr', -1))
+endfun

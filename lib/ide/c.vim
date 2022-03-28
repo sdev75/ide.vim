@@ -66,25 +66,26 @@ augroup END
 let s:widget = g:IdeWidget.new('mywidget')
 fun! s:widget_open(widget)
   let l:widget = a:widget
-  let l:bufnr = get(l:widget, 'bufnr', -1)
+  let l:bufnr = l:widget.getbufnr()
   if l:bufnr == -1
-    let l:bufnr = g:IdeBuffer.bufnr('mkflags','scratch')
-    call setbufvar(l:bufnr, 'buftype', 'widget')
-    echom l:widget
-    let l:widget.bufnr = l:bufnr
-    let l:layout = g:Ide.getLayout(l:widget.layout_id)
-    let l:bar = l:layout.getBar(l:widget.bar_id)
-    echom "winid is " . l:bar.winid
-    call win_execute(l:bar.winid, 'b' . l:bufnr)
-    call win_execute(l:bar.winid, 'setlocal nonumber')
-    call win_execute(l:bar.winid, 'setlocal nolist')
+    let l:bufnr = g:IdeBuffer.bufnr('example', 'scratch')
+    "call setbufvar(l:bufnr, 'buftype', 'widget')
     call appendbufline(l:bufnr, 0, ["Widget example"])
-    return
   endif
-
-  call win_execute(l:bar.winid, 'b' . l:bufnr)
+  let l:bar = g:Ide.getLayout(l:widget.layout_id).
+        \getBar(l:widget.bar_id)
+  call win_execute(l:bar.getWinid(), 'sb' . l:bufnr)
+  let l:winid = bufwinid(l:bufnr)
+  call win_execute(l:winid, 'setlocal nonumber')
+  call win_execute(l:winid, 'setlocal nolist')
+  let l:widget.bufnr = l:bufnr
+  let l:widget.winid = l:winid
 endfun
 fun! s:widget_close(widget)
+  let l:widget = a:widget
+  echom "Closing widget id " . l:widget.id
+  echom "Window id is " . l:widget.winid
+  call win_execute(l:widget.winid, 'close')
 endfun
 call s:widget.addCallback('open',function('s:widget_open'))
 call s:widget.addCallback('close',function('s:widget_close'))

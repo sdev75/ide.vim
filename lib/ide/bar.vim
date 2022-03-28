@@ -63,12 +63,10 @@ fun! s:Bar.open(bufnr)
   call win_execute(l:winid, 'set winfixwidth')
   let self.winid = l:winid
   call self.onCallback('open')
-  call self.openWidgets()
 endfun
 
 fun! s:Bar.close()
   call self.onCallback('close')
-  call self.closeWidgets()
   call win_execute(self.winid, 'close!')
   let self.winid = -1
 endfun
