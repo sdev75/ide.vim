@@ -33,10 +33,10 @@ fun! s:Layout.init_()
     call l:bar.setWidthPct(s:getBarWidthPct(l:pos))
     call add(self.bars, l:bar)
   endfor
-  let l:termpos = get(g:, 'IdeTerminalBar', '')
-  if len(l:termpos) != 0
-    call self.setBarCallback(l:termpos, 'open', self.initTerm)
-  endif
+  "let l:termpos = get(g:, 'IdeTerminalBar', '')
+  "if len(l:termpos) != 0
+  "  call self.setBarCallback(l:termpos, 'open', self.initTerm)
+  "endif
 endfun
 
 fun! s:Layout.openBar(idx)
@@ -107,13 +107,28 @@ fun! s:Layout.cleanup()
   call g:IdeTerminal.destroy(self.id, "console")
 endfun
 
-fun! s:Layout.addWidget(pos, widget)
+fun! s:Layout.getBarId(pos)
+  return get(self.map, a:pos).idx
+endfun
+
+fun! s:Layout.addWidget(pos, widgetid)
+  let l:barid = self.getBarId(a:pos)
+  let l:widget = g:Ide.getWidget(a:widgetid)
+  if empty(l:widget)
+    echoerr "Widget not registered with id: " . a:widgetid 
+    return -1
+  endif
+
+  let l:widget_copy = copy(l:widget)
+  let l:widget_copy.layoutid = self.id
+  let l:widget_copy.barid = l:barid
+  call self.bars[l:barid].addWidget(l:widget_copy)
+endfun
+
+fun! s:Layout.getWidgets(pos)
   let l:item = get(self.map, a:pos)
   let l:idx = l:item.idx
-  let l:widget = a:widget
-  let l:widget.layout_id = self.id
-  let l:widget.bar_id = l:idx
-  call self.bars[l:idx].addWidget(l:widget)
+  return self.bars[l:idx].getWidgets()
 endfun
 
 " support for multi layouts requires implementation

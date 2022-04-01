@@ -3,6 +3,7 @@ let g:Ide = s:Ide
 
 let s:Ide.pluginpath = expand('<sfile>:p:h:h:h')
 let s:Ide.layouts = {}
+let s:Ide.widgets = {}
 
 function! s:Ide.getRootpath()
   return self.rootpath_
@@ -35,4 +36,13 @@ endfun
 fun! s:Ide.toggleBar(pos)
   let l:layout = self.getLayout()
   call l:layout['toggleBar'](a:pos)
+endfun
+
+fun! s:Ide.registerWidget(widget)
+  let l:id = a:widget.id
+  let self.widgets[l:id] = a:widget
+endfun
+
+fun! s:Ide.getWidget(id)
+  return get(self.widgets, a:id, {})
 endfun

@@ -135,6 +135,8 @@ endfun
 fun! s:Bar.addWidget(widget)
   let l:id = a:widget['id']
   let self.widgets[l:id] = a:widget
+  echom "Widget added successfully. Layout: ".  a:widget.layoutid
+        \ . "Barid: " . a:widget.barid . " Widgetid: " . a:widget.id
 endfun
 
 fun! s:Bar.getWidget(id)
@@ -144,16 +146,18 @@ fun! s:Bar.getWidget(id)
   return 0
 endfun
 
+fun! s:Bar.getWidgets()
+  return self.widgets
+endfun
+
 fun! s:Bar.openWidgets()
   for key in keys(self.widgets)
-    echom "opening widget id " . self.widgets[key].id
     call self.widgets[key].open()
   endfor
 endfun
 
 fun! s:Bar.closeWidgets()
   for key in keys(self.widgets)
-    echom "closing widget id " . self.widgets[key].id
     call self.widgets[key].close()
   endfor
 endfun

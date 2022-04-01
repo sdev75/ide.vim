@@ -17,6 +17,10 @@ fun! ide#loadlib(path)
   execute 'runtime lib/' . a:path . '.vim'
 endfun
 
+fun! ide#loadwidget(path)
+  execute 'runtime widget/'. a:path . '.vim'
+endfun
+
 fun! ide#initCommands()
   command! -n=1 IdeToggleBar call g:Ide.toggleBar(<f-args>)
 endfun
