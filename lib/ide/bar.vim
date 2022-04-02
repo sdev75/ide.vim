@@ -152,12 +152,12 @@ endfun
 
 fun! s:Bar.openWidgets()
   for key in keys(self.widgets)
-    call self.widgets[key].open()
+    call self.widgets[key].run_event('open')
   endfor
 endfun
 
 fun! s:Bar.closeWidgets()
   for key in keys(self.widgets)
-    call self.widgets[key].close()
+    call self.widgets[key].run_event('close')
   endfor
 endfun

@@ -39,8 +39,7 @@ fun! s:Ide.toggleBar(pos)
 endfun
 
 fun! s:Ide.registerWidget(widget)
-  let l:id = a:widget.id
-  let self.widgets[l:id] = a:widget
+  let self.widgets[a:widget.id] = a:widget
 endfun
 
 fun! s:Ide.getWidget(id)

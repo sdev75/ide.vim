@@ -99,13 +99,13 @@ fun! s:Layout.closeWidgets()
   endfor
 endfun
 
-fun! s:Layout.initTerm()
-  call g:IdeTerminal.init(self.id, "console")
-endfun
-
-fun! s:Layout.cleanup()
-  call g:IdeTerminal.destroy(self.id, "console")
-endfun
+"fun! s:Layout.initTerm()
+"  call g:IdeTerminal.init(self.id, "console")
+"endfun
+"
+"fun! s:Layout.cleanup()
+"  call g:IdeTerminal.destroy(self.id, "console")
+"endfun
 
 fun! s:Layout.getBarId(pos)
   return get(self.map, a:pos).idx
@@ -136,6 +136,6 @@ augroup IdeLayout
   autocmd!
   autocmd User OnVimResized
         \ call g:Ide.getLayout().resizeBars()
-  autocmd User OnVimExitPre
-        \ call g:Ide.getLayout().cleanup()
+  "autocmd User OnVimExitPre
+  "      \ call g:Ide.getLayout().cleanup()
 augroup END

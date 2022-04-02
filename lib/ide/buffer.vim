@@ -24,6 +24,16 @@ fun! s:Buffer.delete(name)
   unlet s:map[a:name]
 endfun
 
+fun! s:Buffer.getbufnr(name)
+  if has_key(s:map, a:name)
+    let l:bufnr = bufnr(s:map[a:name])
+    if l:bufnr != -1
+      return l:bufnr
+    endif
+  endif
+  return -1
+endfun 
+
 fun! s:Buffer.bufnr(name, type)
   if has_key(s:map, a:name)
     let l:bufnr = bufnr(s:map[a:name])
@@ -45,6 +55,7 @@ fun! s:Buffer.getbufnr(name)
   return -1
 endfun
 
-fun! s:Buffer.name(layout, prefix, name)
-  return 'ide_' . a:layout . '_' . a:prefix . ' ' . a:name
+fun! s:Buffer.name(layoutid, prefix, name)
+  return 'ide_' . a:layoutid . '_' . a:prefix . ' ' . a:name
 endfun
+
