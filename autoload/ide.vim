@@ -28,7 +28,8 @@ fun! ide#debugmsg(prefix, msg)
     let l:prefix = " "
   endif
   let l:msg = "[DEBUG]" . l:prefix . a:msg
-  execute "normal! :echom \"" . l:msg . "\"\<CR>"
+  "execute "normal! :echom \"" . l:msg . "\"\<CR>"
+  echom l:msg
 endfun
 
 fun! ide#initCommands()

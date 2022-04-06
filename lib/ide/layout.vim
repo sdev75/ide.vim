@@ -117,6 +117,10 @@ fun! s:Layout.getBarId(pos)
   return get(self.map, a:pos).idx
 endfun
 
+fun! s:Layout.getBars()
+  return self.bars
+endfun
+
 fun! s:Layout.addWidget_(widgetid, pos)
   let l:barid = self.getBarId(a:pos)
   let l:widget = g:Ide.getRegisteredWidget(a:widgetid)

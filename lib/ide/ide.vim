@@ -62,3 +62,36 @@ endfun
 fun! s:Ide.getWidgets()
   return self.widgets
 endfun
+
+fun! s:Ide.shutdown_()
+  call self.shutdownWidgets_()
+endfun
+
+fun! s:Ide.shutdownWidgets_()
+  " iterate through every existing layout
+  for layoutid in keys(self.layouts)
+    call ide#debugmsg("ide.shutdown_", "cleaning up layoutid " . layoutid)
+    
+    " iterate through every layout's bar
+    for bar in self.layouts[layoutid].getBars()
+      call ide#debugmsg("ide.shutdown_", "cleaning up all widgets for bar " . bar.id)
+    
+      " iterate through every bar's widget
+      let widgets = bar.getWidgets()
+      for widgetid in keys(widgets)
+        let l:widget = widgets[widgetid]
+        
+        if empty(widget) | continue | endif
+        call ide#debugmsg("ide.shutdown_", "destructing widget " . widget.id)
+        call widget.run_event_('destructor')
+      endfor
+    endfor
+  endfor
+
+  "let x = inputlist([])
+endfun
+
+augroup IdeLib
+  autocmd!
+  autocmd User OnShutdown call s:Ide.shutdown_() 
+augroup END

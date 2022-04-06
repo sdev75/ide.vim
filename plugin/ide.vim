@@ -29,6 +29,7 @@ let g:IdeTerminalBar = get(g:, 'IdeTerminalBar', 'bottom')
 augroup Ide
   autocmd!
   autocmd VimResized * doautocmd User OnVimResized
+  autocmd VimLeavePre * doautocmd User OnShutdown
   autocmd FileType c,cpp,h call ide#loadlib('ide/c')
 augroup END
 
