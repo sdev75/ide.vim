@@ -15,17 +15,17 @@ endif
 ## Layouts, bars and widgets
 
 This vim script is structured using layouts, bars (or sidebars) and widgets.
-Layouts provide you with a virtual interface which you can switch to when using
+Layouts provide you with a virtual interface that you can switch to when using
 tabs. A layout is generally indexed using the tab number using the result of
-the `tabpagenr()` function. However, this the script allows to create arbitrary
+the `tabpagenr()` function. However, this script allows you to create arbitrary
 virtual layouts. 
 
 ### Bars or sidebars
-Every layout has 4 sidebars (left, bottom, top, right). 
+A layout has 4 sidebars sorted by position (left, bottom, top, right). 
 
 ### Widgets
 Every bar might have one ore more widgets. Widgets are shared globally but
-constructed individually for every layout's sidebar. Giving full flexibility.
+constructed individually for every layout's sidebar, giving full flexibility.
 An example showing this functionality can be found in the `widget` folder.
 
 ## Basic usage
