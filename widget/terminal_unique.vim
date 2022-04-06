@@ -1,4 +1,4 @@
-let s:widget = g:IdeWidget.new('terminal')
+let s:widget = g:IdeWidget.new('terminal_unique')
 
 let s:buf_prefix = 'ide_widget_term_'
 
@@ -9,24 +9,26 @@ fun! s:widget.constructor(widget)
   let l:bar = g:Ide.getLayout(l:layoutid).getBar(a:widget.barid)
   " create new empty buffer
   let l:bufname = s:buf_prefix . l:layoutid
-  " init new term within the bar window
-  call win_execute(l:bar.getWinid(), 'term') 
-  " delete previous buffer as it has been replaced by the terminal
-  execute 'bw ' . bufnr('%')
+  " create a new buffer in a new window and turn it into a terminal
+  execute 'new'
+  execute 'term ++curwin'
   let l:bufnr = bufnr('$')
- 
-  call ide#debugmsg("terminal.constructor",
-        \" bufnr " . l:bufnr
-        \." winid " . bufwinid(l:bufnr)
-        \." bar.id " . l:bar.id
-        \." bar.winid " . l:bar.winid)
+  let l:winid = bufwinid(l:bufnr)
   call setbufvar(l:bufnr, "&buflisted", 0)
   call setbufvar(l:bufnr, "terminal", 1)
   call term_setkill(l:bufnr, "kill")
-
-  call l:bar.setWinid(bufwinid(l:bufnr))
-  call g:IdeBuffer.rename(l:bufnr, l:bufname)
-  "call win_execute(bufwinid(l:bufnr),'close!')
+  " rename terminal buffer
+  execute 'file ' . l:bufname
+  " renaming a terminal always creates a new buffer
+  " buffer wipeout erases it
+  execute 'bw ' . bufnr('$')
+  " close the terminal window
+  call win_execute(l:winid, 'close!')
+  call ide#debugmsg("terminal.constructor",
+        \" bufnr " . l:bufnr
+        \." winid " . l:winid 
+        \." bar.id " . l:bar.id
+        \." bar.winid " . l:bar.winid)
 endfun
 
 fun! s:widget.destructor(widget)

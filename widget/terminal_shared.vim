@@ -1,26 +1,28 @@
 let s:widget = g:IdeWidget.new('terminal_shared')
 
-let s:buf_prefix = 'ide_widget_termshared_'
+let s:buf_prefix = 'ide_widget_term_'
 
 fun! s:widget.constructor(widget)
-  " use unique name based on layoutid 
-  " each layout might have its own terminal
   let l:layoutid = a:widget.layoutid
   let l:bar = g:Ide.getLayout(l:layoutid).getBar(a:widget.barid)
-  " create new empty buffer
+  
   let l:bufname = s:buf_prefix . 'shared'
   let l:bufnr = bufnr(l:bufname)
   if l:bufnr == -1
-    " init new term within the bar window
-    call win_execute(l:bar.getWinid(), 'term') 
-    " delete previous buffer as it has been replaced by the terminal
-    execute 'bw ' . bufnr('%')
+    " create new shared buffer
+    execute 'new'
+    execute 'term ++curwin'
+    
     let l:bufnr = bufnr('$')
     call setbufvar(l:bufnr, "&buflisted", 0)
     call setbufvar(l:bufnr, "terminal", 1)
     call term_setkill(l:bufnr, "kill")
-    call g:IdeBuffer.rename(l:bufnr, l:bufname)
-    call l:bar.setWinid(bufwinid(l:bufnr))
+    " rename buffer
+    execute 'file ' . l:bufname
+    " wipe obsolete buffer
+    execute 'bw ' . bufnr('$')
+    " close the terminal window
+    call win_execute(bufwinid(l:bufnr), 'close!')
   endif
  
   call ide#debugmsg("terminal.constructor",
