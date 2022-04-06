@@ -24,14 +24,20 @@ fun! s:setflags(...)
   return l:flags
 endfun
 
-fun! s:Bar.new()
+fun! s:Bar.new(barid, layoutid)
   let l:obj = copy(self)
   let l:obj.winid = -1
   let l:obj.flags = 0
   let l:obj.width_pct = 0
   let l:obj.callbacks = {}
   let l:obj.widgets = {}
+  let l:obj.id = a:barid
+  let l:obj.layoutid = a:layoutid
   return l:obj
+endfun
+
+fun! s:Bar.setWinid(winid)
+  let self.winid = a:winid
 endfun
 
 fun! s:Bar.getWinid()
@@ -54,15 +60,36 @@ fun! s:Bar.setFlags(flags)
   let self.flags = a:flags
 endfun
 
-fun! s:Bar.open(bufnr)
+fun! s:Bar.open()
   if self.getWinid()
     return
   endif
-  execute 'sb' . a:bufnr
+  " create empty buffer
+  let l:bufname = "idebar_" . self.layoutid . "_" . self.id
+  let l:bufnr = bufnr(l:bufname)
+  if l:bufnr == -1
+    let l:bufnr = bufadd(l:bufname)
+    call setbufvar(l:bufnr, "&buftype", "nofile")
+    call setbufvar(l:bufnr, "&bufhidden", "hide")
+    call setbufvar(l:bufnr, "&swapfile", 0)
+    call setbufvar(l:bufnr, "&buflisted", 0)
+    call setbufvar(l:bufnr, "&filetype", "idebuf")
+  endif
+  call ide#debugmsg("bar.open.beg",
+        \ " id " . self.id
+        \ . " layoutid " . self.layoutid
+        \ . " bufnr " . l:bufnr
+        \ . " winid " . self.getWinid())
+  execute 'sb' . l:bufnr
   let l:winid = win_getid()
   call win_execute(l:winid, 'set winfixwidth')
-  let self.winid = l:winid
-  call self.onCallback('open')
+  call self.setWinid(l:winid)
+  
+  call ide#debugmsg("bar.open.end",
+        \ " id " . self.id
+        \ . " layoutid " . self.layoutid
+        \ . " bufnr " . l:bufnr
+        \ . " winid " . self.getWinid())
 endfun
 
 fun! s:Bar.close()
@@ -86,22 +113,18 @@ fun! s:Bar.align()
   let l:flags = self.flags
   if and(l:flags, s:Flags.LEFT) == s:Flags.LEFT
     call win_execute(l:winid, 'wincmd H')
-    "echom "H executed"
     return
 
   elseif and(l:flags, s:Flags.RIGHT) == s:Flags.RIGHT
     call win_execute(l:winid, 'wincmd L')
-    "echom "L executed"
     return
 
   elseif and(l:flags, s:Flags.BOTTOM) == s:Flags.BOTTOM
     call win_execute(l:winid, 'wincmd J')
-    "echom "J executed"
     return
 
   elseif and(l:flags, s:Flags.TOP) == s:Flags.TOP
     call win_execute(l:winid, 'wincmd K')
-    "echom "K executed"
     return
   endif
 endfun
@@ -135,8 +158,12 @@ endfun
 fun! s:Bar.addWidget(widget)
   let l:id = a:widget['id']
   let self.widgets[l:id] = a:widget
-  echom "Widget added successfully. Layout: ".  a:widget.layoutid
-        \ . "Barid: " . a:widget.barid . " Widgetid: " . a:widget.id
+  call ide#debugmsg("bar.addWidget",
+        \ " bar.id " . self.id
+        \ . " bar.layoutid " . self.layoutid
+        \ . " widget.id " . a:widget.id
+        \ . " widget.layoutid " . a:widget.layoutid
+        \ . " widget.barid " . a:widget.barid)
 endfun
 
 fun! s:Bar.getWidget(id)
@@ -151,13 +178,21 @@ fun! s:Bar.getWidgets()
 endfun
 
 fun! s:Bar.openWidgets()
+  call ide#debugmsg("bar.openWidgets",
+        \"opening widgets for bar " . self.id
+        \." layoutid " . self.layoutid)
   for key in keys(self.widgets)
+    call ide#debugmsg("bar.openWidgets", "widget " . key)
     call self.widgets[key].run_event('open')
   endfor
 endfun
 
 fun! s:Bar.closeWidgets()
+  call ide#debugmsg("bar.closeWidgets",
+        \"closing widgets for bar " . self.id
+        \." layoutid " . self.layoutid)
   for key in keys(self.widgets)
+    call ide#debugmsg("bar.closeWidgets", "widget " . key)
     call self.widgets[key].run_event('close')
   endfor
 endfun

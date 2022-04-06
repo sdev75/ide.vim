@@ -5,7 +5,7 @@ let s:Flags = {}
 let g:WidgetFlags = s:Flags
 let s:Flags.DUMMY = 1
 
-let s:Events = #{construct:1,destruct:1,open:1,close:1}
+let s:Events = #{constructor:1,destructor:1,open:1,close:1}
 let s:PublicEvents = #{open:1,close:1}
 
 fun! s:Widget.new(id)
@@ -22,6 +22,7 @@ fun! s:Widget.run_event_(event_name)
   execute "let l:res = self['" . a:event_name . "_']()"
   if l:res == -1
     " stop propagation if return value is -1
+    call ide#debugmsg("widget.run_event_", "Stopping propagation for " . a:event_name)
     return
   endif
   " execute any callbacks
@@ -32,55 +33,46 @@ fun! s:Widget.run_event_(event_name)
 endfun
 
 fun! s:Widget.run_event(event_name)
+  call ide#debugmsg("widget.run_event", "widgetid " . self.id . " event " . a:event_name)
   if !has_key(s:PublicEvents, a:event_name)
-    echoerr 'Invalid event: ' . a:event_name
+    echoerr '[Widget] run_event(): Invalid event: ' . a:event_name
     return
   endif
   if !self.constructed
-    let l:res = self.run_event_('construct')
+    call ide#debugmsg("widget.run_event", "widget requires construction")
+    let l:res = self.run_event_('constructor')
     if l:res == -1
-      echoerr "Failed to construct widget " . self.id
+      echoerr "[Widget] run_event_(): Failed to construct widget " . self.id
       return -1
     endif
   endif
   return self.run_event_(a:event_name)
 endfun
 
-fun! s:Widget.construct_()
-  echom "parent construct() called"
+fun! s:Widget.constructor_()
+  call ide#debugmsg("widget.constructor_", "invoked")
+  if self.constructed
+    echoerr "[Widget] Already constructed. ABORTING"
+    return -1
+  endif
   let self.constructed = 1
 endfun
 
-fun! s:Widget.destruct_()
-  echom "parent destruct() called"
+fun! s:Widget.destructor_()
+  call ide#debugmsg("widget.destructor_", "invoked")
+  if !self.constructed
+    echoerr "[Widget] Already destructed. ABORTING"
+    return -1
+  endif
   let self.constructed = 0
-  "if has_key(self.callbacks, 'destruct')
-  "  call self.callback['destruct'](self)
-  "endif
 endfun
 
 fun! s:Widget.open_()
-  echom "parent open() called"
   call self.setvar('open', 1)
 endfun
 
 fun! s:Widget.close_()
-  echom "parent close() called"
   call self.setvar('open', 0)
-endfun
-
-fun! s:Widget.getbufnr()
-  return bufnr(self.getvar('bufvar', -1))
-  "return winbufnr(get(self, 'winid', -1))
-  "return bufnr(get(self, 'bufnr', -1))
-endfun
-
-fun! s:Widget.setbufnr(bufnr)
-  "let self.bufnr = a:bufnr
-endfun
-
-fun! s:Widget.setWinid(winid)
-  let self.winid = a:winid
 endfun
 
 fun! s:Widget.setvar(key, val)
@@ -90,3 +82,4 @@ endfun
 fun! s:Widget.getvar(key, default)
   return get(self.vars, a:key, a:default)
 endfun
+

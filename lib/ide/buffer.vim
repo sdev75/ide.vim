@@ -13,6 +13,16 @@ fun! s:Buffer.scratch()
   return l:bufnr
 endfun
 
+fun! s:Buffer.scratch()
+  let l:bufnr = bufadd('')
+  call setbufvar(l:bufnr, "&buftype", "nofile")
+  call setbufvar(l:bufnr, "&bufhidden", "hide")
+  call setbufvar(l:bufnr, "&swapfile", 0)
+  call setbufvar(l:bufnr, "&buflisted", 0)
+  call setbufvar(l:bufnr, "&filetype", "idebuf")
+  return l:bufnr
+endfun
+
 fun! s:Buffer.create(name,type)
   let l:bufnr = self[a:type]()
   let s:map[a:name] = l:bufnr
@@ -56,6 +66,22 @@ fun! s:Buffer.getbufnr(name)
 endfun
 
 fun! s:Buffer.name(layoutid, prefix, name)
-  return 'ide_' . a:layoutid . '_' . a:prefix . ' ' . a:name
+  return 'ide_' . a:layoutid . '_' . a:prefix . '_' . a:name
+endfun
+
+fun! s:Buffer.rename(bufnr, newname)
+  let l:lastbufnr = bufnr('%')
+  
+  execute 'b ' . a:bufnr
+  execute 'file ' . a:newname
+  
+  if getbufvar(a:bufnr, "&buftype") ==# 'terminal'
+    " renaming a terminal always creates a new buffer
+    " renaming extra buffer created when using `:file` command
+    execute 'bw ' . bufnr('$')
+  endif
+
+  " return to previous buffer
+  execute 'b' . l:lastbufnr
 endfun
 

@@ -1,7 +1,7 @@
 " widget example
 let s:widget = g:IdeWidget.new('mywidget')
 "
-fun! s:widget.construct(widget)
+fun! s:widget.constructor(widget)
   " abort if getbufnr exists
   let l:bufnr = g:IdeBuffer.bufnr('example', 'scratch')
   call bufload(l:bufnr)
@@ -9,7 +9,7 @@ fun! s:widget.construct(widget)
   call setbufvar(l:bufnr, 'number', 0)
   call setbufvar(l:bufnr, 'list', 0)
   
-  echo "widget constructed successfully with bufnr " . l:bufnr
+  echom "example widget constructed successfully with bufnr " . l:bufnr
 endfun
 "
 fun! s:widget.open(widget)
@@ -27,4 +27,4 @@ fun! s:widget.close(widget)
   call win_execute(l:winid, 'close')
 endfun
 
-call g:Ide.registerWidget(s:widget)
+"call g:Ide.registerWidget(s:widget)

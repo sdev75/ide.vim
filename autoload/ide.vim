@@ -21,6 +21,16 @@ fun! ide#loadwidget(path)
   execute 'runtime widget/'. a:path . '.vim'
 endfun
 
+fun! ide#debugmsg(prefix, msg)
+  if len(a:prefix)
+    let l:prefix = " " . a:prefix . ": "
+  else
+    let l:prefix = " "
+  endif
+  let l:msg = "[DEBUG]" . l:prefix . a:msg
+  execute "normal! :echom \"" . l:msg . "\"\<CR>"
+endfun
+
 fun! ide#initCommands()
   command! -n=1 IdeToggleBar call g:Ide.toggleBar(<f-args>)
 endfun

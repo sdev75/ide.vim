@@ -24,16 +24,13 @@ let g:IdeBarMinWidthPctBottom   = get(g:, 'IdeBarMinWidthPctBottom', 10)
 let g:IdeBarMinWidthPctTop      = get(g:, 'IdeBarMinWidthPctTop', 10)
 let g:IdeBarMinWidthPctRight    = get(g:, 'IdeBarMinWidthPctRight', 35)
 let g:IdeTerminalBar = get(g:, 'IdeTerminalBar', 'bottom')
+"autocmd ExitPre * doautocmd User OnVimExitPre
 
 augroup Ide
   autocmd!
   autocmd VimResized * doautocmd User OnVimResized
-  autocmd ExitPre * doautocmd User OnVimExitPre
-augroup END
-
-augroup IdeLibC
-  autocmd!
   autocmd FileType c,cpp,h call ide#loadlib('ide/c')
 augroup END
+
 call ide#init()
 call ide#initCommands()
