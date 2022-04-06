@@ -1,5 +1,76 @@
-let s:widget = g:IdeWidget.new('terminal_unique')
+let s:widget = g:IdeWidget.new('terminal')
 
-fun! s:widget.construct(widget)
+let s:buf_prefix = 'ide_widget_term_'
 
+fun! s:widget.constructor(widget)
+  " use unique name based on layoutid 
+  " each layout might have its own terminal
+  let l:layoutid = a:widget.layoutid
+  let l:bar = g:Ide.getLayout(l:layoutid).getBar(a:widget.barid)
+  " create new empty buffer
+  let l:bufname = s:buf_prefix . l:layoutid
+  " init new term within the bar window
+  call win_execute(l:bar.getWinid(), 'term') 
+  " delete previous buffer as it has been replaced by the terminal
+  execute 'bw ' . bufnr('%')
+  let l:bufnr = bufnr('$')
+ 
+  call ide#debugmsg("terminal.constructor",
+        \" bufnr " . l:bufnr
+        \." winid " . bufwinid(l:bufnr)
+        \." bar.id " . l:bar.id
+        \." bar.winid " . l:bar.winid)
+  call setbufvar(l:bufnr, "&buflisted", 0)
+  call setbufvar(l:bufnr, "terminal", 1)
+  call term_setkill(l:bufnr, "kill")
+
+  call l:bar.setWinid(bufwinid(l:bufnr))
+  call g:IdeBuffer.rename(l:bufnr, l:bufname)
+  "call win_execute(bufwinid(l:bufnr),'close!')
 endfun
+
+fun! s:widget.destructor(widget)
+  let l:layoutid = a:widget.layoutid
+  let l:bar = g:Ide.getLayout(l:layoutid).getBar(a:widget.barid)
+  let l:bufname = s:buf_prefix . l:layoutid
+  let l:bufnr = bufnr(l:bufname)
+  if l:bufnr == -1
+    " term_setkill(bufnr, kill) will do the trick
+    return
+  endif
+  call ide#debugmsg("terminal.destructor", "deleting buffer " . l:bufnr)
+  execute 'bd! ' . l:bufnr
+endfun
+
+fun! s:widget.open(widget)
+  let l:layoutid = a:widget.layoutid
+  let l:bufname = s:buf_prefix . l:layoutid
+  let l:bufnr = bufnr(l:bufname)
+  let l:barid = a:widget.barid
+  let l:bar = g:Ide.getLayout(l:layoutid).getBar(l:barid)
+  call ide#debugmsg("terminal.open",
+        \ " bufnr " . l:bufnr
+        \ . " bufname " . l:bufname
+        \ . " layoutid " . l:layoutid
+        \ . " winid " . bufwinid(l:bufnr)
+        \ . " bar.winid " . l:bar.getWinid())
+  
+  call win_execute(l:bar.getWinid(), 'b ' . l:bufnr)
+endfun
+
+fun! s:widget.close(widget)
+  let l:layoutid = a:widget.layoutid
+  let l:bufname = s:buf_prefix . l:layoutid
+  let l:bufnr = bufnr(l:bufname)
+  let l:winid = bufwinid(l:bufnr)
+  call ide#debugmsg("terminal.close",
+        \ " layoutid " . l:layoutid
+        \ . " bufname " . l:bufname
+        \ . " bufnr " . l:bufnr
+        \ . " winid " . l:winid)
+  "let l:winid = a:widget.getvar('winid',-1)
+  call win_execute(l:winid, 'close!')
+endfun
+
+call g:Ide.registerWidget(s:widget)
+
