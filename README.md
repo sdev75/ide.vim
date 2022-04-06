@@ -12,17 +12,58 @@ if exists('Ide')
 endif
 ```
 
+## Layouts, bars and widgets
+
+This vim script is structured using layouts, bars (or sidebars) and widgets.
+Layouts provide you with a virtual interface which you can switch to when using
+tabs. A layout is generally indexed using the tab number using the result of
+the `tabpagenr()` function. However, this the script allows to create arbitrary
+virtual layouts. 
+
+### Bars or sidebars
+Every layout has 4 sidebars (left, bottom, top, right). 
+
+### Widgets
+Every bar might have one ore more widgets. Widgets are shared globally but
+constructed individually for every layout's sidebar. Giving full flexibility.
+An example showing this functionality can be found in the `widget` folder.
+
 ## Basic usage
 
-Toggle Terminal:
+This is a very brief and incomplete usage instroduction. I will update it
+whenever possible.
+
+Toggling a bar would be as easy as calling the command `:IdeToggleBar
+<position>`, where position could either be `left`, `bottom`, `top,` or
+`right`.
+
 ```vim
-nnoremap <leader><key> :call Ide.toggleTerminal()<cr>
+nnoremap <leader>h :IdeToggleBar left<cr>
+nnoremap <leader>j :IdeToggleBar bottom<cr>
+nnoremap <leader>l :IdeToggleBar right<cr>
 ```
 
-Toggle terminal within the terminal window itself:
+### Widgets
+Widgets are loaded manually to avoid too much processing.
+
 ```vim
-tnoremap <leader><key> <C-w>:call Ide.toggleTerminal()<cr>
+call ide#loadwidget('terminal_unique')
+call ide#loadwidget('terminal_shared')
+```
+
+Once a widget is loaded it can be attached to a specific layout.
+
+```vim
+call g:Ide.addWidget(1, 'bottom', 'terminal_unique')
+```
+
+It is also possible to attach a specific widget to all virtual layouts by
+specifying `-1` as layoutid
+
+```vim
+call g:Ide.addWidget(-1, 'bottom', 'terminal_shared')
 ```
 
 ## Disclaimer
-This is a very basic and probably wont fit your needs. It's ongoing development.
+This script is for personal use, and it's still early development phase. I will
+add more information as I continue to make progress.
