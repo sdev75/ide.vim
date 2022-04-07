@@ -43,6 +43,24 @@ nnoremap <leader>j :IdeToggleBar bottom<cr>
 nnoremap <leader>l :IdeToggleBar right<cr>
 ```
 
+Configuration options can be overriden within your .vimrc file.
+
+```vim
+" set bottom bar to be 7.5% of total height
+let g:IdeBarMinWidthPctBottom = 7.5
+```
+
+Layout can have 4 sticky modes. Each mode determines the stickiness of the sidebar. 
+
+```vim
+" 0 = left bar
+" 1 = right bar
+" 2 = bottom bar
+" 3 = left and right
+let g:IdeBarStickyMode = 2
+```
+Setting it to 2 as above would force the bottom bar to be always taking up the whole width.
+
 ### Widgets
 Widgets are loaded manually to avoid too much processing.
 

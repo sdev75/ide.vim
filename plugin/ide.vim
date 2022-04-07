@@ -16,15 +16,11 @@ let loaded_ide = 1
 " 2 = bottom bar
 " 3 = left and right
 let g:IdeBarStickyMode = get(g:, 'IdeBarStickyMode', 0)
-" left, bottom, top, right
-let g:IdeBarMinWidthPct = get(g:, 'IdeBarMinWidthPct', 
-      \ [15, 10, 10, 35])
 let g:IdeBarMinWidthPctLeft     = get(g:, 'IdeBarMinWidthPctLeft', 15)
-let g:IdeBarMinWidthPctBottom   = get(g:, 'IdeBarMinWidthPctBottom', 10)
+let g:IdeBarMinWidthPctBottom   = get(g:, 'IdeBarMinWidthPctBottom', 7)
 let g:IdeBarMinWidthPctTop      = get(g:, 'IdeBarMinWidthPctTop', 10)
 let g:IdeBarMinWidthPctRight    = get(g:, 'IdeBarMinWidthPctRight', 35)
-let g:IdeTerminalBar = get(g:, 'IdeTerminalBar', 'bottom')
-"autocmd ExitPre * doautocmd User OnVimExitPre
+let g:IdeDebugVerbosity         = get(g:, 'IdeDebugVerbosity', 0)
 
 augroup Ide
   autocmd!

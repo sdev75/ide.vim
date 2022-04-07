@@ -22,14 +22,17 @@ fun! ide#loadwidget(path)
 endfun
 
 fun! ide#debugmsg(prefix, msg)
+  if !g:IdeDebugVerbosity
+    return
+  endif
   if len(a:prefix)
     let l:prefix = " " . a:prefix . ": "
   else
     let l:prefix = " "
   endif
   let l:msg = "[DEBUG]" . l:prefix . a:msg
-  "execute "normal! :echom \"" . l:msg . "\"\<CR>"
-  echom l:msg
+  execute "normal! :echom \"" . l:msg . "\"\<CR>"
+  "echom l:msg
 endfun
 
 fun! ide#initCommands()

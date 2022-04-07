@@ -80,9 +80,10 @@ fun! s:Bar.open()
         \ . " layoutid " . self.layoutid
         \ . " bufnr " . l:bufnr
         \ . " winid " . self.getWinid())
-  execute 'sb' . l:bufnr
+  execute 'silent! sb' . l:bufnr
   let l:winid = win_getid()
   call win_execute(l:winid, 'set winfixwidth')
+  call win_execute(l:winid, 'set winfixheight')
   call self.setWinid(l:winid)
   
   call ide#debugmsg("bar.open.end",
