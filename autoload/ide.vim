@@ -31,8 +31,11 @@ fun! ide#debugmsg(prefix, msg)
     let l:prefix = " "
   endif
   let l:msg = "[DEBUG]" . l:prefix . a:msg
-  execute "normal! :echom \"" . l:msg . "\"\<CR>"
-  "echom l:msg
+  if g:IdeDebugVerbosity == 1
+    execute "normal! :echom \"" . l:msg . "\"\<CR>"
+    return
+  endif
+  echom l:msg
 endfun
 
 fun! ide#initCommands()

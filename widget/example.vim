@@ -1,7 +1,7 @@
 " widget example
 let s:widget = g:IdeWidget.new('mywidget')
 "
-fun! s:widget.constructor(widget)
+fun! s:widget.constructor(widget, payload)
   " abort if getbufnr exists
   let l:bufnr = g:IdeBuffer.bufnr('example', 'scratch')
   call bufload(l:bufnr)
@@ -12,7 +12,7 @@ fun! s:widget.constructor(widget)
   echom "example widget constructed successfully with bufnr " . l:bufnr
 endfun
 "
-fun! s:widget.open(widget)
+fun! s:widget.open(widget, payload)
   " get stored layout instance
   let l:bar = g:Ide.getLayout(a:widget.layoutid)
         \.getBar(a:widget.barid)
@@ -22,7 +22,7 @@ fun! s:widget.open(widget)
   call a:widget.setvar('winid', bufwinid(l:bufnr))
 endfun
 "
-fun! s:widget.close(widget)
+fun! s:widget.close(widget, payload)
   let l:winid = a:widget.getvar('winid',-1)
   call win_execute(l:winid, 'close')
 endfun

@@ -10,18 +10,18 @@ fun! s:widget.constructor(widget)
   " create new empty buffer
   let l:bufname = s:buf_prefix . l:layoutid
   " create a new buffer in a new window and turn it into a terminal
-  execute 'new'
-  execute 'term ++curwin'
+  execute 'silent! new'
+  execute 'silent! term ++curwin'
   let l:bufnr = bufnr('$')
   let l:winid = bufwinid(l:bufnr)
   call setbufvar(l:bufnr, "&buflisted", 0)
   call setbufvar(l:bufnr, "terminal", 1)
   call term_setkill(l:bufnr, "kill")
   " rename terminal buffer
-  execute 'file ' . l:bufname
+  execute 'silent! file ' . l:bufname
   " renaming a terminal always creates a new buffer
   " buffer wipeout erases it
-  execute 'bw ' . bufnr('$')
+  execute 'silent! bw ' . bufnr('$')
   " close the terminal window
   call win_execute(l:winid, 'close!')
   call ide#debugmsg("terminal.constructor",

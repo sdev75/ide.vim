@@ -53,7 +53,7 @@ function! makefile#getvar(makefile, name)
   let l:makefile_path = fnamemodify(a:makefile,':p:h')
   let l:cmd = 'make --no-print-directory -f ' . l:makefile_script
   let l:cmd.= ' -C ' . l:makefile_path
-  let l:cmd.= ' -B print-var-' . a:name
+  let l:cmd.= ' -B print-var_-' . a:name
   let l:res = system(l:cmd)
   if v:shell_error
     echoerr "An error has occurred: " . v:errmsg
@@ -64,16 +64,23 @@ endfunction
 fun! makefile#buildcmd(makefile, target)
   let l:wrapper = shellescape(g:Ide.pluginpath . '/script/makefile.mk')
   let l:parentdir = fnamemodify(a:makefile,':p:h')
-  let l:cmd = 'make --no-print-directory -f ' . l:wrapper . ' -C ' . l:parentdir
+  let l:cmd= 'make --no-print-directory -f ' . l:wrapper . ' -C ' . l:parentdir
   let l:cmd.= ' -B ' . a:target
   return l:cmd
 endfun
 
-function! makefile#preprocess(makefile, filename)
-  echo "Preprocessing " . a:filename
-  let l:awkfile = shellescape(g:Ide.pluginpath . '/script/makefile_pp.awk')
-  let l:cmd = makefile#buildcmd(a:makefile,'preprocess-test')
-  let l:cmd.= ' AWKFILE=' . l:awkfile
-  echom l:cmd
-  echo system(l:cmd)
-endfunction
+fun! makefile#preprocess(makefile, filename)
+  let l:awkfile = g:Ide.pluginpath . '/script/makefile_pp.awk'
+  let l:cmd= makefile#buildcmd(a:makefile,'preprocess_')
+  let l:cmd.=' AWKFILE=' . shellescape(l:awkfile)
+  let l:cmd.=' FILENAME=' . shellescape(a:filename)
+  execute 'silent read !' . l:cmd
+  "return system(l:cmd)
+endfun
+
+fun! makefile#assemble(makefile, filename)
+  let l:awkfile = g:Ide.pluginpath . '/script/makefile_pp.awk'
+  let l:cmd= makefile#buildcmd(a:makefile,'objdump_')
+  let l:cmd.=' FILENAME=' . shellescape(a:filename)
+  execute 'silent read !' . l:cmd
+endfun

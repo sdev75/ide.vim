@@ -5,8 +5,18 @@ let s:Flags = {}
 let g:WidgetFlags = s:Flags
 let s:Flags.DUMMY = 1
 
-let s:Events = #{constructor:1,destructor:1,open:1,close:1}
-let s:PublicEvents = #{open:1,close:1}
+let s:Events = #{
+      \constructor:1,
+      \destructor:1,
+      \open:1,
+      \close:1,
+      \update:1
+      \}
+let s:PublicEvents = #{
+      \open:1,
+      \close:1,
+      \update:1
+      \}
 
 fun! s:Widget.new(id)
   let l:obj = copy(self)
@@ -17,9 +27,10 @@ fun! s:Widget.new(id)
   return l:obj
 endfun
 
-fun! s:Widget.run_event_(event_name)
+fun! s:Widget.run_event_(event_name, payload)
   " execute parent callback
-  execute "let l:res = self['" . a:event_name . "_']()"
+  let l:res = self[a:event_name.'_'](a:payload)
+  "execute "let l:res = self['" . a:event_name . "_']()"
   if l:res == -1
     " stop propagation if return value is -1
     call ide#debugmsg("widget.run_event_", "Stopping propagation for " . a:event_name)
@@ -29,10 +40,10 @@ fun! s:Widget.run_event_(event_name)
   if !has_key(self, a:event_name)
     return
   endif
-  return self[a:event_name](self)
+  return self[a:event_name](self, a:payload)
 endfun
 
-fun! s:Widget.run_event(event_name)
+fun! s:Widget.run_event(event_name, payload)
   call ide#debugmsg("widget.run_event", "widgetid " . self.id . " event " . a:event_name)
   if !has_key(s:PublicEvents, a:event_name)
     echoerr '[Widget] run_event(): Invalid event: ' . a:event_name
@@ -40,16 +51,16 @@ fun! s:Widget.run_event(event_name)
   endif
   if !self.constructed
     call ide#debugmsg("widget.run_event", "widget requires construction")
-    let l:res = self.run_event_('constructor')
+    let l:res = self.run_event_('constructor', a:payload)
     if l:res == -1
       echoerr "[Widget] run_event_(): Failed to construct widget " . self.id
       return -1
     endif
   endif
-  return self.run_event_(a:event_name)
+  return self.run_event_(a:event_name, a:payload)
 endfun
 
-fun! s:Widget.constructor_()
+fun! s:Widget.constructor_(payload)
   call ide#debugmsg("widget.constructor_", "invoked")
   if self.constructed
     echoerr "[Widget] Already constructed. ABORTING"
@@ -58,7 +69,7 @@ fun! s:Widget.constructor_()
   let self.constructed = 1
 endfun
 
-fun! s:Widget.destructor_()
+fun! s:Widget.destructor_(payload)
   call ide#debugmsg("widget.destructor_", "invoked")
   if !self.constructed
     echoerr "[Widget] Already destructed. ABORTING"
@@ -67,12 +78,15 @@ fun! s:Widget.destructor_()
   let self.constructed = 0
 endfun
 
-fun! s:Widget.open_()
+fun! s:Widget.open_(payload)
   call self.setvar('open', 1)
 endfun
 
-fun! s:Widget.close_()
+fun! s:Widget.close_(payload)
   call self.setvar('open', 0)
+endfun
+
+fun! s:Widget.update_(payload)
 endfun
 
 fun! s:Widget.setvar(key, val)

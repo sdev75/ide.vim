@@ -38,34 +38,49 @@ fun! s:Layout.init_(layoutid)
   " init widgets
   call ide#debugmsg("layout.init_", "initing widgets layoutid " . self.id)
   let l:widgets = g:Ide.getWidgets()
-  for item in values(l:widgets)
-    if item.layoutid == -1
-      call ide#debugmsg("layout.init_", "adding widget " . item.widgetid)
+  for widgetid in keys(l:widgets)
+    for item in l:widgets[widgetid]
       " -1 equals the widget should be constructed for every layout's instance
-      call self.addWidget_(item.widgetid, item.position)
-      continue
-    endif
-
-    if item.layoutid == self.id
+      if item.layoutid == -1
+        call ide#debugmsg("layout.init_", "add widget " . item.widgetid)
+        call self.addWidget_(item.widgetid, item.position)
+        continue
+      endif
       " add widget to the matching layout id
-      call ide#debugmsg("layout.init_", "adding widget (layout match) " . item.widgetid)
-      call self.addWidget_(item.widgetid, item.position)
+      if item.layoutid == self.id
+        call ide#debugmsg("layout.init_", "add widget (layout match) " . item.widgetid)
+        call self.addWidget_(item.widgetid, item.position)
+      endif
+    endfor
+  endfor
+  for item in values(l:widgets)
+  endfor
+endfun
+
+fun! s:Layout.draw(idx, val)
+  for idx in range(0, 3)
+    call self.bars[idx].closeWidgets()
+    call self.bars[idx].close()
+    call self.alignBars()
+    call self.resizeBars()
+  endfor
+  let self.bars[a:idx].state_= a:val
+  for idx in range(0, 3)
+    if self.bars[idx].state_ == 1
+      call self.bars[idx].open()
+      call self.alignBars()
+      call self.openWidgets()
+      call self.resizeBars()
     endif
   endfor
 endfun
 
 fun! s:Layout.openBar(idx)
-  call self.bars[a:idx].open()
-  call self.alignBars()
-  call self.resizeBars()
-  call self.openWidgets()
+  call self.draw(a:idx, 1)
 endfun
 
 fun! s:Layout.closeBar(idx)
-  call self.closeWidgets()
-  call self.bars[a:idx].close()
-  call self.alignBars()
-  call self.resizeBars()
+  call self.draw(a:idx, 0)
 endfun
 
 fun! s:Layout.toggleBar(pos)

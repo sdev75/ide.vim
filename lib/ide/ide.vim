@@ -52,7 +52,11 @@ fun! s:Ide.addWidget(layoutid, position, widgetid)
   let l:payload.layoutid = a:layoutid
   let l:payload.position = a:position
   let l:payload.widgetid = l:widget.id
-  let self.widgets[l:widget.id] = l:payload
+  if !has_key(self.widgets, l:widget.id)
+    let self.widgets[l:widget.id] = []
+  endif
+  call add(self.widgets[l:widget.id], payload)
+  "let self.widgets[l:widget.id] = l:payload
 endfun
 
 fun! s:Ide.getRegisteredWidget(id)
@@ -83,7 +87,7 @@ fun! s:Ide.shutdownWidgets_()
         
         if empty(widget) | continue | endif
         call ide#debugmsg("ide.shutdown_", "destructing widget " . widget.id)
-        call widget.run_event_('destructor')
+        call widget.run_event_('destructor', {})
       endfor
     endfor
   endfor

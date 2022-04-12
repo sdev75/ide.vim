@@ -32,6 +32,7 @@ fun! s:Bar.new(barid, layoutid)
   let l:obj.callbacks = {}
   let l:obj.widgets = {}
   let l:obj.id = a:barid
+  let l:obj.state_ = 0
   let l:obj.layoutid = a:layoutid
   return l:obj
 endfun
@@ -184,7 +185,7 @@ fun! s:Bar.openWidgets()
         \." layoutid " . self.layoutid)
   for key in keys(self.widgets)
     call ide#debugmsg("bar.openWidgets", "widget " . key)
-    call self.widgets[key].run_event('open')
+    call self.widgets[key].run_event('open', #{barid: self.id})
   endfor
 endfun
 
@@ -194,6 +195,6 @@ fun! s:Bar.closeWidgets()
         \." layoutid " . self.layoutid)
   for key in keys(self.widgets)
     call ide#debugmsg("bar.closeWidgets", "widget " . key)
-    call self.widgets[key].run_event('close')
+    call self.widgets[key].run_event('close', #{barid: self.id})
   endfor
 endfun
