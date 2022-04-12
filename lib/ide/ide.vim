@@ -34,8 +34,17 @@ fun! s:Ide.getLayout(...)
 endfun
 
 fun! s:Ide.toggleBar(pos)
+  " save current winid
+  let l:winid = win_getid()
   let l:layout = self.getLayout()
   call l:layout['toggleBar'](a:pos)
+  " return to previous winid
+  call win_gotoid(l:winid)
+endfun
+
+fun! s:Ide.toggleTerminal()
+  let l:layout = self.getLayout()
+  call l:layout['toggleTerminal'](g:IdeTerminalPos)
 endfun
 
 fun! s:Ide.registerWidget(widget)

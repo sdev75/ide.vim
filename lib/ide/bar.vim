@@ -169,7 +169,7 @@ fun! s:Bar.addWidget(widget)
 endfun
 
 fun! s:Bar.getWidget(id)
-  if has_key(self.widgets[a:id])
+  if has_key(self.widgets,a:id)
     return self.widgets[a:id]
   endif
   return 0

@@ -21,6 +21,7 @@ let g:IdeBarMinWidthPctBottom   = get(g:, 'IdeBarMinWidthPctBottom', 7)
 let g:IdeBarMinWidthPctTop      = get(g:, 'IdeBarMinWidthPctTop', 10)
 let g:IdeBarMinWidthPctRight    = get(g:, 'IdeBarMinWidthPctRight', 35)
 let g:IdeDebugVerbosity         = get(g:, 'IdeDebugVerbosity', 0)
+let g:IdeTerminalPos            = get(g:, 'IdeTerminalPos', 'bottom')
 
 augroup Ide
   autocmd!

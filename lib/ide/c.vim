@@ -126,13 +126,21 @@ fun! s:test()
   endif
   
   let l:widgets = g:Ide.getWidgets()
-  echom l:widgets['objdump_shared']
-
-
+  let l:widget = l:widgets['objdump_shared'][0]
+ 
+  let l:barid = g:Ide.getLayout().getBarId(l:widget.position)
+  let l:widget = g:Ide.getLayout().getBar(l:barid).getWidget('objdump_shared')
+  let l:filename = expand("%:p")
+  let l:payload = #{
+        \filename: l:filename,
+        \winid: win_getid(),
+        \makefile: s:C.makefile_vars['makefile']
+        \}
+  call win_gotoid(bufwinid(bufnr( l:widget.getbufnr() )))
+  call l:widget.run_event('update', l:payload)
 endfun
 
 augroup ide_lib_c_objdump
   autocmd!
-  autocmd BufWrite *.c
-        \ call s:test()
+  autocmd BufWritePost *.c  call s:test()
 augroup END

@@ -58,16 +58,16 @@ fun! s:Layout.init_(layoutid)
 endfun
 
 fun! s:Layout.draw(idx, val)
-  for idx in range(0, 3)
-    call self.bars[idx].closeWidgets()
-    call self.bars[idx].close()
+  for i in range(0, 3)
+    call self.bars[i].closeWidgets()
+    call self.bars[i].close()
     call self.alignBars()
     call self.resizeBars()
   endfor
   let self.bars[a:idx].state_= a:val
-  for idx in range(0, 3)
-    if self.bars[idx].state_ == 1
-      call self.bars[idx].open()
+  for i in range(0, 3)
+    if self.bars[i].state_ == 1
+      call self.bars[i].open()
       call self.alignBars()
       call self.openWidgets()
       call self.resizeBars()
@@ -91,6 +91,10 @@ fun! s:Layout.toggleBar(pos)
     return
   endif
   call self.openBar(l:idx)
+endfun
+
+fun! s:Layout.toggleTerminal(pos)
+  call self.toggleBar(a:pos)
 endfun
 
 fun! s:Layout.getBar(id)

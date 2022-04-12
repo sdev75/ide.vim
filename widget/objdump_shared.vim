@@ -50,10 +50,22 @@ fun! s:widget.close(widget, payload)
   call win_execute(l:winid, 'close!')
 endfun
 
+fun! s:widget.getbufnr()
+  return s:buf_prefix . 'shared'
+endfun
+
 fun! s:widget.update(widget, payload)
   let l:bufname = s:buf_prefix . 'shared'
   let l:bufnr = bufnr(l:bufname)
   call setbufline(l:bufnr, 1, [strftime("%c")])
+  call setbufline(l:bufnr, 2, [a:payload.filename])
+  call setbufline(l:bufnr, 3, [bufwinid(l:bufnr)])
+  
+  call win_gotoid(bufwinid(l:bufnr))
+  call win_gotoid(bufwinid(l:bufnr))
+  "call makefile#assemble(a:payload.makefile, 
+  "      \a:payload.filename)
+  "call win_gotoid(a:payload.winid)
 endfun
 
 call g:Ide.registerWidget(s:widget)
