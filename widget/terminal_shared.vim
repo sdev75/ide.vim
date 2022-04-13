@@ -62,5 +62,5 @@ fun! s:widget.close(widget, payload)
   call win_execute(l:winid, 'close!')
 endfun
 
-call g:Ide.registerWidget(s:widget)
+call g:IdeWidget.register(s:widget)
 

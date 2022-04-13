@@ -13,9 +13,10 @@ fun! s:widget.constructor(widget, payload)
     let l:bufnr = bufnr('$')
     call setbufvar(l:bufnr, "&buflisted", 0)
     call setbufvar(l:bufnr, "widget", 1)
-    call setbufvar(l:bufnr, 'number', 0)
-    call setbufvar(l:bufnr, 'list', 0)
+    call setbufvar(l:bufnr, '&number', 0)
+    call setbufvar(l:bufnr, '&list', 0)
     execute 'silent! file ' . l:bufname
+
     call win_execute(bufwinid(l:bufnr), 'close!')
   endif
 endfun
@@ -35,6 +36,12 @@ fun! s:widget.open(widget, payload)
         \ . " bar.winid " . l:bar.getWinid())
   
   call win_execute(l:bar.getWinid(), 'sb ' . l:bufnr)
+  let l:winbar = "nnoremenu 1.10 WinBar.Assembly :NONE<CR>"
+  call win_execute(bufwinid(l:bufnr), l:winbar)
+endfun
+
+fun! s:widget.opened()
+  doautocmd User IdeWidgetOpen
 endfun
 
 fun! s:widget.close(widget, payload)
@@ -57,16 +64,74 @@ endfun
 fun! s:widget.update(widget, payload)
   let l:bufname = s:buf_prefix . 'shared'
   let l:bufnr = bufnr(l:bufname)
-  call setbufline(l:bufnr, 1, [strftime("%c")])
-  call setbufline(l:bufnr, 2, [a:payload.filename])
-  call setbufline(l:bufnr, 3, [bufwinid(l:bufnr)])
-  
-  call win_gotoid(bufwinid(l:bufnr))
-  call win_gotoid(bufwinid(l:bufnr))
+
+  call win_execute(bufwinid(l:bufnr),'normal! ggdG')
+  call appendbufline(l:bufnr, '$', split(a:payload.buf, "\n")) 
+"  call append(l:bufnr, split(a:payload.buf, "\n"))
+  "call setbufline(l:bufnr, 4, [a:payload.buf])
   "call makefile#assemble(a:payload.makefile, 
   "      \a:payload.filename)
   "call win_gotoid(a:payload.winid)
 endfun
 
-call g:Ide.registerWidget(s:widget)
+call g:IdeWidget.register(s:widget)
 
+if !empty(g:IdeWidget.get('objdump_shared'))
+augroup ide_lib_c_objdump
+  autocmd!
+  autocmd User IdeWidgetOpen call s:trydisasm()
+  autocmd BufWritePost *.c  call s:disasm()
+  autocmd CursorMoved *.c call s:gotoline()
+augroup END
+
+fun! s:trydisasm()
+  if !has_key(g:Ide.getLayout(), 'mainBufnr')
+    return
+  endif
+  let l:bufnr = g:Ide.getLayout().mainBufnr
+  let l:filename = fnamemodify(bufname(l:bufnr), ':p')
+  call s:disasm_(l:filename)
+endfun
+
+fun! s:disasm()
+  let l:filename = expand("%:p")
+  call s:disasm_(l:filename) 
+endfun
+
+fun! s:disasm_(filename)
+  let l:widgets = g:Ide.getWidgets()
+  let l:widget = l:widgets['objdump_shared'][0]
+ 
+  let l:barid = g:Ide.getLayout().getBarId(l:widget.position)
+  let l:widget = g:Ide.getLayout().getBar(l:barid).getWidget('objdump_shared')
+  let l:filename = a:filename
+  let l:buf = makefile#assemble(
+        \g:IdeC.makefile_vars['makefile'],
+        \l:filename)
+  let l:payload = #{
+        \filename: a:filename,
+        \winid: win_getid(),
+        \makefile: g:IdeC.makefile_vars['makefile'],
+        \buf: l:buf
+        \}
+  call l:widget.run_event('update', l:payload)
+  call s:gotoline()
+endfun
+
+fun! s:gotoline()
+  let l:widgets = g:Ide.getWidgets()
+  let l:widget = l:widgets['objdump_shared'][0]
+  let l:barid = g:Ide.getLayout().getBarId(l:widget.position)
+  let l:widget = g:Ide.getLayout()
+        \.getBar(l:barid)
+        \.getWidget('objdump_shared')
+  let l:bufnr = bufnr(l:widget.getbufnr())
+  if l:bufnr == -1
+    return
+  endif
+  let l:str = "g/" . expand('%:t') . ":" . line('.') . "$/"
+  call win_execute(bufwinid(l:bufnr), 'set hlsearch')
+  call win_execute(bufwinid(l:bufnr), l:str)
+  call win_execute(bufwinid(l:bufnr), 'redraw')
+endfun
+endif

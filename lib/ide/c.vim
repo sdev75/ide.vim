@@ -117,30 +117,3 @@ augroup IdeLibC
         \ nnoremap <buffer><leader>a :call IdeC.switchToAssembly()<cr>
 augroup END
 
-
-fun! s:test()
-  " objdump is shared, run event only on one
-  let l:widget = g:Ide.getRegisteredWidget('objdump_shared')
-  if empty(l:widget)
-    return
-  endif
-  
-  let l:widgets = g:Ide.getWidgets()
-  let l:widget = l:widgets['objdump_shared'][0]
- 
-  let l:barid = g:Ide.getLayout().getBarId(l:widget.position)
-  let l:widget = g:Ide.getLayout().getBar(l:barid).getWidget('objdump_shared')
-  let l:filename = expand("%:p")
-  let l:payload = #{
-        \filename: l:filename,
-        \winid: win_getid(),
-        \makefile: s:C.makefile_vars['makefile']
-        \}
-  call win_gotoid(bufwinid(bufnr( l:widget.getbufnr() )))
-  call l:widget.run_event('update', l:payload)
-endfun
-
-augroup ide_lib_c_objdump
-  autocmd!
-  autocmd BufWritePost *.c  call s:test()
-augroup END

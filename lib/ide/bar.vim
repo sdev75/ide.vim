@@ -187,6 +187,13 @@ fun! s:Bar.openWidgets()
     call ide#debugmsg("bar.openWidgets", "widget " . key)
     call self.widgets[key].run_event('open', #{barid: self.id})
   endfor
+  
+  for key in keys(self.widgets)
+    if has_key(self.widgets[key], 'opened')
+      call ide#debugmsg("bar.openWidgets.opened", "widget " . key)
+      call self.widgets[key].opened()
+    endif
+  endfor
 endfun
 
 fun! s:Bar.closeWidgets()

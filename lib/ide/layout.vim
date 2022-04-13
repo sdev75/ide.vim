@@ -101,12 +101,6 @@ fun! s:Layout.getBar(id)
   return self.bars[a:id]
 endfun
 
-"fun! s:Layout.setBarCallback(pos, name, cb)
-"  let l:item = get(self.map, a:pos)
-"  let l:idx = l:item.idx
-"  call self.bars[l:idx].setCallback(a:name, a:cb)
-"endfun
-
 fun! s:Layout.alignBars()
   let l:range = s:MapStickySeq[g:IdeBarStickyMode]
   for idx in l:range
@@ -142,7 +136,7 @@ endfun
 
 fun! s:Layout.addWidget_(widgetid, pos)
   let l:barid = self.getBarId(a:pos)
-  let l:widget = g:Ide.getRegisteredWidget(a:widgetid)
+  let l:widget = g:IdeWidget.get(a:widgetid)
   if empty(l:widget)
     echoerr "Widget not registered with id: " . a:widgetid 
     return -1

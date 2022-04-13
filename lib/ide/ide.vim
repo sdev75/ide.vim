@@ -35,24 +35,24 @@ endfun
 
 fun! s:Ide.toggleBar(pos)
   " save current winid
-  let l:winid = win_getid()
   let l:layout = self.getLayout()
+  " save current winid and bufnr
+  let l:layout.mainWinid = win_getid()
+  let l:layout.mainBufnr = bufnr('')
   call l:layout['toggleBar'](a:pos)
   " return to previous winid
-  call win_gotoid(l:winid)
+  call win_gotoid(l:layout.mainWinid)
 endfun
 
 fun! s:Ide.toggleTerminal()
   let l:layout = self.getLayout()
   call l:layout['toggleTerminal'](g:IdeTerminalPos)
-endfun
-
-fun! s:Ide.registerWidget(widget)
-  let self.widgets_[a:widget.id] = a:widget
+  let l:bar = l:layout.getBar(l:layout.getBarId(g:IdeTerminalPos))
+  call win_gotoid(l:bar.getWinid())
 endfun
 
 fun! s:Ide.addWidget(layoutid, position, widgetid)
-  let l:widget = self.getRegisteredWidget(a:widgetid)
+  let l:widget = g:IdeWidget.get(a:widgetid)
   if empty(l:widget)
     echoerr "Widget was not registered: " . a:widgetid
     return
@@ -68,12 +68,12 @@ fun! s:Ide.addWidget(layoutid, position, widgetid)
   "let self.widgets[l:widget.id] = l:payload
 endfun
 
-fun! s:Ide.getRegisteredWidget(id)
-  return get(self.widgets_, a:id, {})
-endfun
-
 fun! s:Ide.getWidgets()
   return self.widgets
+endfun
+
+fun! s:Ide.getWidget(widgetid)
+  return get(self.widgets, a:widgetid, -1)
 endfun
 
 fun! s:Ide.shutdown_()

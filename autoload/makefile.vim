@@ -82,5 +82,5 @@ fun! makefile#assemble(makefile, filename)
   let l:awkfile = g:Ide.pluginpath . '/script/makefile_pp.awk'
   let l:cmd= makefile#buildcmd(a:makefile,'objdump_')
   let l:cmd.=' FILENAME=' . shellescape(a:filename)
-  execute 'silent read !' . l:cmd
+  return system(l:cmd)
 endfun

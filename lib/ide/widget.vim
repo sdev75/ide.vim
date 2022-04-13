@@ -17,6 +17,15 @@ let s:PublicEvents = #{
       \close:1,
       \update:1
       \}
+let s:widgets = {}
+
+fun! s:Widget.register(widget)
+  let s:widgets[a:widget.id] = a:widget
+endfun
+
+fun! s:Widget.get(widgetid)
+  return get(s:widgets, a:widgetid, {})
+endfun
 
 fun! s:Widget.new(id)
   let l:obj = copy(self)
@@ -96,4 +105,3 @@ endfun
 fun! s:Widget.getvar(key, default)
   return get(self.vars, a:key, a:default)
 endfun
-
