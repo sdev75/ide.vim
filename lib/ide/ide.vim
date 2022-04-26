@@ -51,6 +51,14 @@ fun! s:Ide.toggleTerminal()
   call win_gotoid(l:bar.getWinid())
 endfun
 
+fun! s:Ide.openTerminalAndFocus()
+  let l:layout = self.getLayout()
+  let l:barid = l:layout.getBarId(g:IdeTerminalPos)
+  let l:bar = l:layout.getBar(l:barid)
+  call l:layout.openBar(l:barid)
+  call win_gotoid(l:bar.getWinid())
+endfun
+
 fun! s:Ide.addWidget(layoutid, position, widgetid)
   let l:widget = g:IdeWidget.get(a:widgetid)
   if empty(l:widget)

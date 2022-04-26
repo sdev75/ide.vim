@@ -41,4 +41,5 @@ endfun
 fun! ide#initCommands()
   command! -n=1 IdeToggleBar call g:Ide.toggleBar(<f-args>)
   command! -n=0 IdeToggleTerminal call g:Ide.toggleTerminal()
+  command! -n=0 IdeOpenTerminalAndFocus call g:Ide.openTerminalAndFocus()
 endfun
