@@ -12,7 +12,6 @@ fun! s:widget.constructor(widget, payload)
     execute 'silent! new'
     let l:bufnr = bufnr('$')
     call setbufvar(l:bufnr, "&buflisted", 0)
-    call setbufvar(l:bufnr, "widget", 1)
     call setbufvar(l:bufnr, '&number', 0)
     call setbufvar(l:bufnr, '&list', 0)
     execute 'silent! file ' . l:bufname
@@ -80,15 +79,24 @@ if !empty(g:IdeWidget.get('objdump_shared'))
 augroup ide_lib_c_objdump
   autocmd!
   autocmd User IdeWidgetOpen call s:trydisasm()
+  autocmd User IdeCInit call s:disasm()
   autocmd BufWritePost *.c  call s:disasm()
   autocmd CursorMoved *.c call s:gotoline()
 augroup END
 
 fun! s:trydisasm()
-  if !has_key(g:Ide.getLayout(), 'mainBufnr')
+  "if !has_key(g:Ide.getLayout(), 'mainBufnr')
+  "  return
+  "endif
+  "let l:bufnr = g:Ide.getLayout().mainBufnr
+  let l:bufnr = g:Ide.getLayout().getvar('originBufnr', -1)
+  echom bufname(l:bufnr)
+  let l:ext = fnamemodify(bufname(l:bufnr),':e')
+  echom "extension is " . l:ext
+  if l:ext != 'c'
     return
   endif
-  let l:bufnr = g:Ide.getLayout().mainBufnr
+  call ide#debugmsg("trydisasm", "mainbufnr is " . l:bufnr) 
   let l:filename = fnamemodify(bufname(l:bufnr), ':p')
   call s:disasm_(l:filename)
 endfun
@@ -103,15 +111,15 @@ fun! s:disasm_(filename)
   let l:widget = l:widgets['objdump_shared'][0]
  
   let l:barid = g:Ide.getLayout().getBarId(l:widget.position)
-  let l:widget = g:Ide.getLayout().getBar(l:barid).getWidget('objdump_shared')
-  let l:filename = a:filename
-  let l:buf = makefile#assemble(
-        \g:IdeC.makefile_vars['makefile'],
-        \l:filename)
+  let l:widget = g:Ide.getLayout()
+        \.getBar(l:barid).getWidget('objdump_shared')
+  let l:makefile = g:IdeC.makefile_vars['makefile']
+  let l:payload = #{FILENAME:a:filename}
+  let l:buf = makefile#runcmd(l:makefile, 'objdump_dwarf', l:payload)
   let l:payload = #{
         \filename: a:filename,
         \winid: win_getid(),
-        \makefile: g:IdeC.makefile_vars['makefile'],
+        \makefile: l:makefile,
         \buf: l:buf
         \}
   call l:widget.run_event('update', l:payload)
@@ -132,6 +140,7 @@ fun! s:gotoline()
   let l:str = "g/" . expand('%:t') . ":" . line('.') . "$/"
   call win_execute(bufwinid(l:bufnr), 'set hlsearch')
   call win_execute(bufwinid(l:bufnr), l:str)
+  call win_execute(bufwinid(l:bufnr), 'setlocal scrolloff=10')
   call win_execute(bufwinid(l:bufnr), 'redraw')
 endfun
 endif

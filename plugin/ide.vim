@@ -27,9 +27,10 @@ augroup Ide
   autocmd!
   autocmd VimResized * doautocmd User OnVimResized
   autocmd VimLeavePre * doautocmd User OnShutdown
-  autocmd FileType c,cpp,h 
-        \ call ide#loadlib('ide/c') |
-        \ call ide#loadlib('ide/c_watcher')
+  autocmd FileType c,cpp,h call ide#loadlib('ide/c')
+  "autocmd FileType c,cpp,h 
+  "      \ call ide#loadlib('ide/c') |
+  "      \ call ide#loadlib('ide/c_watcher')
 augroup END
 
 call ide#init()

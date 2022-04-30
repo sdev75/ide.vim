@@ -84,3 +84,29 @@ fun! makefile#assemble(makefile, filename)
   let l:cmd.=' FILENAME=' . shellescape(a:filename)
   return system(l:cmd)
 endfun
+
+fun! makefile#runcmd(makefile, cmd, vars)
+  let l:awkfile = g:Ide.pluginpath . '/script/makefile_pp.awk'
+  let l:cmd = makefile#buildcmd(a:makefile,a:cmd . '_')
+
+  if !empty(a:vars)
+    for key in keys(a:vars)
+      let l:cmd.=' ' . key . '=' .shellescape(a:vars[key])
+    endfor
+  endif
+
+  return system(l:cmd)
+endfun
+
+fun! makefile#exec_cmd(makefile, cmd, vars)
+  let l:awkfile = g:Ide.pluginpath . '/script/makefile_pp.awk'
+  let l:cmd = makefile#buildcmd(a:makefile,a:cmd . '_')
+
+  if !empty(a:vars)
+    for key in keys(a:vars)
+      let l:cmd.=' ' . key . '=' .shellescape(a:vars[key])
+    endfor
+  endif
+
+  execute 'silent read !' . l:cmd
+endfun

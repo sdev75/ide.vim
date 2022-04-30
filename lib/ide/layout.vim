@@ -28,6 +28,7 @@ fun! s:Layout.init_(layoutid)
   " Left, Right, Bottom, Top, ...
   let self.map = deepcopy(s:Map)
   let self.bars = []
+  let self.vars_ = {}
   for idx in range(0,len(s:MapIndex)-1)
     let l:pos = s:MapIndex[idx]
     let l:bar = g:IdeBar.new(idx, a:layoutid)
@@ -76,6 +77,8 @@ fun! s:Layout.draw(idx, val)
 endfun
 
 fun! s:Layout.openBar(idx)
+  call self.setvar('originBufnr', bufnr())
+  call self.setvar('originWinid', win_getid())
   call self.draw(a:idx, 1)
 endfun
 
@@ -152,6 +155,14 @@ fun! s:Layout.getWidgets(pos)
   let l:item = get(self.map, a:pos)
   let l:idx = l:item.idx
   return self.bars[l:idx].getWidgets()
+endfun
+
+fun! s:Layout.setvar(key, val)
+  let self.vars_[a:key] = a:val
+endfun
+
+fun! s:Layout.getvar(key, default)
+  return get(self.vars_, a:key, a:default)
 endfun
 
 " support for multi layouts requires implementation
