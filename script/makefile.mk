@@ -21,5 +21,8 @@ objdump_: $(basename $(FILENAME)).o
 objdump_dwarf_: $(basename $(FILENAME)).o
 	objdump -dj .text -M intel $< -l
 
+objdump_symtable_: $(basename $(FILENAME)).o
+	objdump -t $<
+
 test_cmd_:
 	@echo $$FILENAME and $$VAR2

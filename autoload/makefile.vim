@@ -64,7 +64,7 @@ endfunction
 fun! makefile#buildcmd(makefile, target)
   let l:wrapper = shellescape(g:Ide.pluginpath . '/script/makefile.mk')
   let l:parentdir = fnamemodify(a:makefile,':p:h')
-  let l:cmd= 'make --no-print-directory -f ' . l:wrapper . ' -C ' . l:parentdir
+  let l:cmd= 'make -s --no-print-directory -f ' . l:wrapper . ' -C ' . l:parentdir
   let l:cmd.= ' -B ' . a:target
   return l:cmd
 endfun

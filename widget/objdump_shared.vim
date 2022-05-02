@@ -18,6 +18,8 @@ fun! s:widget.constructor(widget, payload)
 
     call win_execute(bufwinid(l:bufnr), 'close!')
   endif
+
+  call self.setvar('minheightpct', 0.6)
 endfun
 
 fun! s:widget.open(widget, payload)
@@ -26,7 +28,7 @@ fun! s:widget.open(widget, payload)
   let l:bufnr = bufnr(l:bufname)
   let l:barid = a:widget.barid
   let l:bar = g:Ide.getLayout(l:layoutid).getBar(l:barid)
-  
+ 
   call ide#debugmsg("objdump.open",
         \ " bufnr " . l:bufnr
         \ . " bufname " . l:bufname
@@ -37,6 +39,10 @@ fun! s:widget.open(widget, payload)
   call win_execute(l:bar.getWinid(), 'sb ' . l:bufnr)
   let l:winbar = "nnoremenu 1.10 WinBar.Assembly :NONE<CR>"
   call win_execute(bufwinid(l:bufnr), l:winbar)
+  call ide#debugmsg("objdump.open",
+        \ "bar height is " . winheight(l:bar.getWinid()))
+  call self.setvar('bufnr', l:bufnr)
+  "call self.setHeightPct(bufwinid(l:bufnr), 0.6)
 endfun
 
 fun! s:widget.opened()

@@ -82,6 +82,7 @@ fun! s:Bar.open()
         \ . " bufnr " . l:bufnr
         \ . " winid " . self.getWinid())
   execute 'silent! sb' . l:bufnr
+  call setbufvar(l:bufnr, "&number", 0)
   let l:winid = win_getid()
   call win_execute(l:winid, 'set winfixwidth')
   call win_execute(l:winid, 'set winfixheight')
@@ -188,10 +189,21 @@ fun! s:Bar.openWidgets()
     call self.widgets[key].run_event('open', #{barid: self.id})
   endfor
   
+  " hide empty bar's content
+  " give space to widgets
+  call win_execute(self.getWinid(), 'resize 0')
+  
   for key in keys(self.widgets)
     if has_key(self.widgets[key], 'opened')
       call ide#debugmsg("bar.openWidgets.opened", "widget " . key)
       call self.widgets[key].opened()
+    endif
+    let l:h = self.widgets[key].getvar('minheightpct', -1)
+    if l:h != -1
+      echom "height is " . l:h
+      let l:bufnr = self.widgets[key].getvar('bufnr',-1)
+      call win_execute(bufwinid(l:bufnr), 
+            \'resize ' . float2nr(l:h * &lines))
     endif
   endfor
 endfun

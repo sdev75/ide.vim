@@ -43,3 +43,15 @@ fun! ide#initCommands()
   command! -n=0 IdeToggleTerminal call g:Ide.toggleTerminal()
   command! -n=0 IdeOpenTerminalAndFocus call g:Ide.openTerminalAndFocus()
 endfun
+
+fun! ide#newBlankBuffer(bufname)
+  execute 'silent! new'
+  let l:bufnr = bufnr('$')
+  call setbufvar(l:bufnr, "&buflisted", 0)
+  call setbufvar(l:bufnr, '&number', 0)
+  call setbufvar(l:bufnr, '&list', 0)
+  execute 'silent! file ' . a:bufname
+
+  call win_execute(bufwinid(l:bufnr), 'close!')
+endfun!
+

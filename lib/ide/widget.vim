@@ -105,3 +105,8 @@ endfun
 fun! s:Widget.getvar(key, default)
   return get(self.vars, a:key, a:default)
 endfun
+
+fun! s:Widget.setHeightPct(winid, pct)
+  call win_execute(a:winid,
+        \ 'resize ' . float2nr(a:pct * &lines))
+endfun
