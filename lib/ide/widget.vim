@@ -110,3 +110,14 @@ fun! s:Widget.setHeightPct(winid, pct)
   call win_execute(a:winid,
         \ 'resize ' . float2nr(a:pct * &lines))
 endfun
+
+fun! s:Widget.createBuffer(bufname)
+    execute 'silent! new'
+    let l:bufnr = bufnr('$')
+    call setbufvar(l:bufnr, "&buflisted", 0)
+    call setbufvar(l:bufnr, '&number', 0)
+    call setbufvar(l:bufnr, '&list', 0)
+    execute 'silent! file ' . l:bufname
+
+    call win_execute(bufwinid(l:bufnr), 'close!')
+endfun

@@ -78,9 +78,7 @@ fun! s:try()
   let l:bufnr = g:Ide.getLayout().getvar('originBufnr', -1)
   echom bufname(l:bufnr)
   let l:ext = fnamemodify(bufname(l:bufnr),':e')
-  if l:ext != 'c'
-    return
-  endif
+  if l:ext != 'c' | return | endif
   let l:filename = fnamemodify(bufname(l:bufnr), ':p')
   call s:do_(l:filename)
 endfun
@@ -99,7 +97,7 @@ fun! s:do_(filename)
         \.getBar(l:barid).getWidget(s:widgetid)
   let l:makefile = g:IdeC.makefile_vars['makefile']
   let l:payload = #{FILENAME:a:filename}
-  let l:buf = makefile#runcmd(l:makefile, 'objdump_symtable', l:payload)
+  let l:buf = makefile#runcmd(l:makefile, 'readelf-syms', l:payload)
   let l:payload = #{
         \filename: a:filename,
         \winid: win_getid(),

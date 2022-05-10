@@ -98,10 +98,7 @@ fun! s:trydisasm()
   let l:bufnr = g:Ide.getLayout().getvar('originBufnr', -1)
   echom bufname(l:bufnr)
   let l:ext = fnamemodify(bufname(l:bufnr),':e')
-  echom "extension is " . l:ext
-  if l:ext != 'c'
-    return
-  endif
+  if l:ext != 'c' | return | endif
   call ide#debugmsg("trydisasm", "mainbufnr is " . l:bufnr) 
   let l:filename = fnamemodify(bufname(l:bufnr), ':p')
   call s:disasm_(l:filename)
@@ -121,7 +118,7 @@ fun! s:disasm_(filename)
         \.getBar(l:barid).getWidget('objdump_shared')
   let l:makefile = g:IdeC.makefile_vars['makefile']
   let l:payload = #{FILENAME:a:filename}
-  let l:buf = makefile#runcmd(l:makefile, 'objdump_dwarf', l:payload)
+  let l:buf = makefile#runcmd(l:makefile, 'objdump-dwarf', l:payload)
   let l:payload = #{
         \filename: a:filename,
         \winid: win_getid(),

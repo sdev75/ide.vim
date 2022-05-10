@@ -32,7 +32,7 @@ fun! ide#debugmsg(prefix, msg)
   endif
   let l:msg = "[DEBUG]" . l:prefix . a:msg
   if g:IdeDebugVerbosity == 1
-    execute "normal! :echom \"" . l:msg . "\"\<CR>"
+    execute "normal! :echom \"" . l:msg . "\"\<CR><CR>"
     return
   endif
   echom l:msg

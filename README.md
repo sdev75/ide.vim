@@ -82,6 +82,12 @@ specifying `-1` as layoutid
 call g:Ide.addWidget(-1, 'bottom', 'terminal_shared')
 ```
 
+## Screenshot
+
+Simple use for a c program with object disassembly + readelf
+
+![C Ide Example](/screenshot/c.png)
+
 ## Disclaimer
 This script is for personal use, and it's still early development phase. I will
 add more information as I continue to make progress.

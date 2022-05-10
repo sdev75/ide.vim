@@ -49,11 +49,14 @@ function! makefile#parse(makefile)
 endfunction
 
 function! makefile#getvar(makefile, name)
+  let l:cmd = "print-var_" . a:name
+  return makefile#runcmd(a:makefile, l:cmd, {})
   let l:makefile_script  = g:Ide.pluginpath . '/script/makefile.mk'
   let l:makefile_path = fnamemodify(a:makefile,':p:h')
   let l:cmd = 'make --no-print-directory -f ' . l:makefile_script
   let l:cmd.= ' -C ' . l:makefile_path
-  let l:cmd.= ' -B print-var_-' . a:name
+  let l:cmd.= ' print-var_-' . a:name
+  
   let l:res = system(l:cmd)
   if v:shell_error
     echoerr "An error has occurred: " . v:errmsg
@@ -61,52 +64,82 @@ function! makefile#getvar(makefile, name)
   return l:res
 endfunction
 
-fun! makefile#buildcmd(makefile, target)
-  let l:wrapper = shellescape(g:Ide.pluginpath . '/script/makefile.mk')
+fun! makefile#makecmd(vars, flags)
+  
+endfun
+
+fun! makefile#buildcmd(makefile, target, vars, flags)
+  let l:wrapper = 
+        \ shellescape(g:Ide.pluginpath . '/script/makefile.mk')
   let l:parentdir = fnamemodify(a:makefile,':p:h')
-  let l:cmd= 'make -s --no-print-directory -f ' . l:wrapper . ' -C ' . l:parentdir
-  let l:cmd.= ' -B ' . a:target
+  
+  let l:vars = ''
+  if !empty(a:vars)
+    for key in keys(a:vars)
+      let l:vars .=' ' . key . '=' .shellescape(a:vars[key])
+    endfor
+  endif
+  
+  let l:flags = ''
+  if !empty(a:flags)
+    for key in keys(a:flags)
+      let l:flags .=' ' . key . '=' .shellescape(a:flags[key])
+    endfor
+  endif
+
+  let l:cmd = l:vars . ' make'
+  let l:cmd.= l:flags . ' --no-print-directory'
+  let l:cmd.= ' -f ' . l:wrapper;
+  let l:cmd.= ' -C ' . l:parentdir;
+  let l:cmd.= ' ' . a:target
+  echom l:cmd 
+  return
   return l:cmd
 endfun
 
-fun! makefile#preprocess(makefile, filename)
-  let l:awkfile = g:Ide.pluginpath . '/script/makefile_pp.awk'
-  let l:cmd= makefile#buildcmd(a:makefile,'preprocess_')
-  let l:cmd.=' AWKFILE=' . shellescape(l:awkfile)
-  let l:cmd.=' FILENAME=' . shellescape(a:filename)
-  execute 'silent read !' . l:cmd
-  "return system(l:cmd)
-endfun
+"fun! makefile#preprocess(makefile, filename)
+"  let l:awkfile = g:Ide.pluginpath . '/script/makefile_pp.awk'
+"  let l:cmd= makefile#buildcmd(a:makefile,'preprocess_')
+"  let l:cmd.=' AWKFILE=' . shellescape(l:awkfile)
+"  let l:cmd.=' FILENAME=' . shellescape(a:filename)
+"  execute 'silent read !' . l:cmd
+"  "return system(l:cmd)
+"endfun
 
-fun! makefile#assemble(makefile, filename)
-  let l:awkfile = g:Ide.pluginpath . '/script/makefile_pp.awk'
-  let l:cmd= makefile#buildcmd(a:makefile,'objdump_')
-  let l:cmd.=' FILENAME=' . shellescape(a:filename)
-  return system(l:cmd)
-endfun
+"fun! makefile#assemble(makefile, filename)
+"  let l:awkfile = g:Ide.pluginpath . '/script/makefile_pp.awk'
+"  let l:cmd= makefile#buildcmd(a:makefile,'objdump_')
+"  let l:cmd.=' FILENAME=' . shellescape(a:filename)
+"  return system(l:cmd)
+"endfun
 
 fun! makefile#runcmd(makefile, cmd, vars)
   let l:awkfile = g:Ide.pluginpath . '/script/makefile_pp.awk'
-  let l:cmd = makefile#buildcmd(a:makefile,a:cmd . '_')
-
+  let l:cmd = ""
+  
   if !empty(a:vars)
     for key in keys(a:vars)
-      let l:cmd.=' ' . key . '=' .shellescape(a:vars[key])
+      let l:cmd .=' ' . key . '=' .shellescape(a:vars[key])
     endfor
   endif
 
+  let l:cmd .= ' ' . makefile#buildcmd(a:makefile,a:cmd . '_')
+  
+  "call ide#debugmsg('readcmd', l:cmd)
   return system(l:cmd)
 endfun
 
-fun! makefile#exec_cmd(makefile, cmd, vars)
+fun! makefile#readcmd(makefile, cmd, vars)
   let l:awkfile = g:Ide.pluginpath . '/script/makefile_pp.awk'
-  let l:cmd = makefile#buildcmd(a:makefile,a:cmd . '_')
+  let l:cmd = "" 
 
   if !empty(a:vars)
     for key in keys(a:vars)
-      let l:cmd.=' ' . key . '=' .shellescape(a:vars[key])
+      let l:cmd .=' ' . key . '=' .shellescape(a:vars[key])
     endfor
   endif
 
+  let l:cmd .= ' ' . makefile#buildcmd(a:makefile,a:cmd . '_')
+  "call ide#debugmsg('readcmd', l:cmd)
   execute 'silent read !' . l:cmd
 endfun
