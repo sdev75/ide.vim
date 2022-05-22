@@ -117,8 +117,8 @@ fun! s:disasm_(filename)
   let l:widget = g:Ide.getLayout()
         \.getBar(l:barid).getWidget('objdump_shared')
   let l:makefile = g:IdeC.makefile_vars['makefile']
-  let l:payload = #{FILENAME:a:filename}
-  let l:buf = makefile#runcmd(l:makefile, 'objdump-dwarf', l:payload)
+  let l:vars = #{FILENAME:a:filename}
+  let l:buf = makefile#runcmd(l:makefile, 'objdump-dwarf_', l:vars)
   let l:payload = #{
         \filename: a:filename,
         \winid: win_getid(),

@@ -96,8 +96,8 @@ fun! s:do_(filename)
   let l:widget = g:Ide.getLayout()
         \.getBar(l:barid).getWidget(s:widgetid)
   let l:makefile = g:IdeC.makefile_vars['makefile']
-  let l:payload = #{FILENAME:a:filename}
-  let l:buf = makefile#runcmd(l:makefile, 'readelf-syms', l:payload)
+  let l:vars = #{FILENAME:a:filename}
+  let l:buf = makefile#runcmd(l:makefile, 'readelf-syms_', l:vars)
   let l:payload = #{
         \filename: a:filename,
         \winid: win_getid(),

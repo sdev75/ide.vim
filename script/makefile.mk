@@ -11,10 +11,10 @@ FILENAME_OBJ := $(basename $(FILENAME_BASE)).o
 FILENAME_OUT := $(addprefix $(OBJDIR), $(FILENAME_OBJ))
 OUTPUT_DIR := $(OBJDIR)$(dir $(FILENAME_BASE))
 
-print-var_-%:
+printvar_%:
 	@printf "%b" "$($*)"
 
-print-env_:
+printenv_:
 	@printf "%20s: %-20s\n" "FILENAME" $(FILENAME)
 	@printf "%20s: %-20s\n" "FILENAME OUT" $(FILENAME_OUT)
 	@printf "%20s: %-20s\n" "OUTPUT DIR" $(OUTPUT_DIR)
