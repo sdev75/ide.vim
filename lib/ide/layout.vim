@@ -60,20 +60,66 @@ endfun
 
 fun! s:Layout.draw(idx, val)
   for i in range(0, 3)
+    if self.bars[i].state_ == 0 
+      continue
+    endif
     call self.bars[i].closeWidgets()
     call self.bars[i].close()
-    call self.alignBars()
-    call self.resizeBars()
   endfor
   let self.bars[a:idx].state_= a:val
   for i in range(0, 3)
     if self.bars[i].state_ == 1
       call self.bars[i].open()
-      call self.alignBars()
-      call self.openWidgets()
-      call self.resizeBars()
+      "call self.bars[i].openWidgets()
+      "call self.resizeWidgets()
     endif
   endfor
+
+  call self.alignBars()
+  " open widgets and resize them
+  " this will mess up bars dimensions, so another resizBars 
+  " call is necessary
+  
+  for i in range(0, 3)
+    " call self.bars[i].resizeWidgets()
+    "call self.bars[i].openWidgets()
+    call self.bars[i].resize()
+  endfor
+  " resize once again, enforce dimensions
+  "for i in range(0, 3)
+  "  call self.bars[i].resizeWidgets()
+  "endfor
+ 
+  " open all widgets for each bar
+  for i in range(0, 3)
+    " call self.bars[i].resizeWidgets()
+    call self.bars[i].openWidgets()
+  endfor
+ " call self.bars[3].openWidgets()
+  "call self.bars[1].openWidgets()
+  
+  call ide#debugmsg('layout['.self.id.'].draw',
+        \' bar1 height = ' . self.bars[1].winheight .
+        \' bar3 height = ' . self.bars[3].winheight)
+ 
+  " resize bottom bar first
+  " the order matters as the bottom bar 
+  " alters the total &lines value and will need to 
+  " be recalculated correctly when resizing widgets
+  call self.bars[1].resize()
+
+  for i in range(0, 3)
+    call self.bars[i].resizeWidgets()
+  endfor
+  "call self.resizeWidgets()
+  "call self.bars[1].resizeWidgets()
+  "for i in range(0, 3)
+  "  if self.bars[i].state_ == 1
+  "    call self.bars[i].openWidgets()
+  "    call self.resizeWidgets()
+  "  endif
+  "endfor
+
 endfun
 
 fun! s:Layout.openBar(idx)
@@ -126,6 +172,12 @@ endfun
 fun! s:Layout.closeWidgets()
   for idx in range(0, 3)
     call self.bars[idx].closeWidgets()
+  endfor
+endfun
+
+fun! s:Layout.resizeWidgets()
+  for idx in range(0, 3)
+    call self.bars[idx].resizeWidgets()
   endfor
 endfun
 

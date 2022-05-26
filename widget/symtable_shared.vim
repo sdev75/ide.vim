@@ -12,7 +12,7 @@ fun! s:widget.constructor(widget, payload)
     call ide#newBlankBuffer(l:bufname)
   endif
 
-  call self.setvar('minheightpct', 0.25)
+  call self.setvar('minheightpct', 0.4)
 endfun
 
 fun! s:widget.open(widget, payload)

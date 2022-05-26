@@ -53,16 +53,20 @@ fun! s:Widget.run_event_(event_name, payload)
 endfun
 
 fun! s:Widget.run_event(event_name, payload)
-  call ide#debugmsg("widget.run_event", "widgetid " . self.id . " event " . a:event_name)
+  call ide#debugmsg('widget[' . self.id . '].run_event',
+        \' event = ' . a:event_name)
   if !has_key(s:PublicEvents, a:event_name)
-    echoerr '[Widget] run_event(): Invalid event: ' . a:event_name
+    echoerr 'Invalid event: ' . a:event_name
     return
   endif
   if !self.constructed
-    call ide#debugmsg("widget.run_event", "widget requires construction")
+
+    call ide#debugmsg('widget[' . self.id . '].run_event',
+          \' event = ' . a:event_name . 
+          \' widget requires construction ')
     let l:res = self.run_event_('constructor', a:payload)
     if l:res == -1
-      echoerr "[Widget] run_event_(): Failed to construct widget " . self.id
+      echoerr "Constructor failed"
       return -1
     endif
   endif
@@ -70,18 +74,20 @@ fun! s:Widget.run_event(event_name, payload)
 endfun
 
 fun! s:Widget.constructor_(payload)
-  call ide#debugmsg("widget.constructor_", "invoked")
+  call ide#debugmsg('widget['. self.id . '].constructor_',
+        \'invoked')
   if self.constructed
-    echoerr "[Widget] Already constructed. ABORTING"
+    echoerr "Constructor already called. OH MY"
     return -1
   endif
   let self.constructed = 1
 endfun
 
 fun! s:Widget.destructor_(payload)
-  call ide#debugmsg("widget.destructor_", "invoked")
+  call ide#debugmsg('widget[' .self.id . '].destructor_', 
+        \"invoked")
   if !self.constructed
-    echoerr "[Widget] Already destructed. ABORTING"
+    echoerr "Destructor already called. OOPS"
     return -1
   endif
   let self.constructed = 0

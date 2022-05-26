@@ -34,6 +34,7 @@ fun! s:Bar.new(barid, layoutid)
   let l:obj.id = a:barid
   let l:obj.state_ = 0
   let l:obj.layoutid = a:layoutid
+  let l:obj.winheight = 0
   return l:obj
 endfun
 
@@ -76,11 +77,12 @@ fun! s:Bar.open()
     call setbufvar(l:bufnr, "&buflisted", 0)
     call setbufvar(l:bufnr, "&filetype", "idebuf")
   endif
-  call ide#debugmsg("bar.open.beg",
-        \ " id " . self.id
-        \ . " layoutid " . self.layoutid
-        \ . " bufnr " . l:bufnr
-        \ . " winid " . self.getWinid())
+
+  call ide#debugmsg('bar['.self.id.'].open BEGIN',
+        \" layoutid " . self.layoutid .
+        \" bufnr " . l:bufnr .
+        \" winid " . self.getWinid())
+
   execute 'silent! sb' . l:bufnr
   call setbufvar(l:bufnr, "&number", 0)
   let l:winid = win_getid()
@@ -88,11 +90,10 @@ fun! s:Bar.open()
   call win_execute(l:winid, 'set winfixheight')
   call self.setWinid(l:winid)
   
-  call ide#debugmsg("bar.open.end",
-        \ " id " . self.id
-        \ . " layoutid " . self.layoutid
-        \ . " bufnr " . l:bufnr
-        \ . " winid " . self.getWinid())
+  call ide#debugmsg('bar['.self.id.'].open END',
+        \" layoutid " . self.layoutid .
+        \" bufnr " . l:bufnr .
+        \" winid " . self.getWinid())
 endfun
 
 fun! s:Bar.close()
@@ -114,22 +115,30 @@ fun! s:Bar.align()
   if !l:winid | return | endif
 
   let l:flags = self.flags
+  let l:aligntype = ''
   if and(l:flags, s:Flags.LEFT) == s:Flags.LEFT
     call win_execute(l:winid, 'wincmd H')
+    let l:aligntype = 'LEFT'
     return
 
   elseif and(l:flags, s:Flags.RIGHT) == s:Flags.RIGHT
     call win_execute(l:winid, 'wincmd L')
+    let l:aligntype = 'RIGHT'
     return
 
   elseif and(l:flags, s:Flags.BOTTOM) == s:Flags.BOTTOM
     call win_execute(l:winid, 'wincmd J')
+    let l:aligntype = 'BOTTOM'
     return
 
   elseif and(l:flags, s:Flags.TOP) == s:Flags.TOP
     call win_execute(l:winid, 'wincmd K')
+    let l:aligntype = 'TOP'
     return
   endif
+  
+  call ide#debugmsg('bar[' . self.id . '].align',
+        \ ' aligning using ' .  l:aligntype)
 endfun
 
 fun! s:Bar.resize()
@@ -142,6 +151,15 @@ fun! s:Bar.resize()
   else
     call win_execute(l:winid, 'resize ' . l:width)
   endif
+
+  " The winheight value is lost when resizing buffers around
+  " Saving this value will allow proper resizing of 
+  " each widgets contained within each bar.
+  let self.winheight = winheight(win_id2win(self.getWinid()))
+  
+  call ide#debugmsg('bar['.self.id.'].resize',
+        \' width = ' . l:width . 
+        \' winheight = ' . self.winheight)
 endfun
 
 fun! s:Bar.getMinWidth()
@@ -161,12 +179,11 @@ endfun
 fun! s:Bar.addWidget(widget)
   let l:id = a:widget['id']
   let self.widgets[l:id] = a:widget
-  call ide#debugmsg("bar.addWidget",
-        \ " bar.id " . self.id
-        \ . " bar.layoutid " . self.layoutid
-        \ . " widget.id " . a:widget.id
-        \ . " widget.layoutid " . a:widget.layoutid
-        \ . " widget.barid " . a:widget.barid)
+  call ide#debugmsg('bar[' . self.id . '].addWidgets',
+        \" layoutid = " . self.layoutid .
+        \" widget id =" . a:widget.id .
+        \" widget layoutid = " . a:widget.layoutid .
+        \" widget barid = " . a:widget.barid)
 endfun
 
 fun! s:Bar.getWidget(id)
@@ -181,39 +198,94 @@ fun! s:Bar.getWidgets()
 endfun
 
 fun! s:Bar.openWidgets()
-  call ide#debugmsg("bar.openWidgets",
-        \"opening widgets for bar " . self.id
-        \." layoutid " . self.layoutid)
+  call ide#debugmsg('bar[' . self.id . '].openWidgets',
+        \'\n bar winid = ' . self.getWinid() .
+        \'\n bar winnr = ' . win_id2win(self.getWinid()) .
+        \'\n bar height = ' . winheight(win_id2win(self.winid))
+        \)
+  
+  if len(keys(self.widgets)) == 0
+    call ide#debugmsg('bar[' . self.id . '].openWidgets',
+          \"no widgets to open, aborting")
+    return
+  endif
+  
+  " open each individual widgets
   for key in keys(self.widgets)
-    call ide#debugmsg("bar.openWidgets", "widget " . key)
     call self.widgets[key].run_event('open', #{barid: self.id})
   endfor
-  
-  " hide empty bar's content
-  " give space to widgets
-  call win_execute(self.getWinid(), 'resize 0')
+
+  " resize window placeholder so all the widgets can be 
+  " resized to fit correctly
+  " this is done at the end because the previos operation
+  " require 'room' to open the widgets first
+  "call win_execute(self.getWinid(), 'resize 0') 
+ 
+
+  " resize all widgets
+  "call self.resizeWidgets()
+endfun
+
+fun! s:Bar.resizeWidgets()
+  if len(keys(self.widgets)) == 0
+    call ide#debugmsg('bar['. self.id . '].resizeWidgets',
+          \"no widgets to resize, no work to do. Bye")
+    return
+  endif
+  for key in keys(self.widgets)
+    let l:h = self.widgets[key].getvar('minheightpct', 1)
+    echom " !! calculated height = " . l:h
+    echom " !! bar winheight     = " . self.winheight
+    
+    " resize widget
+    let l:bufnr = self.widgets[key].getvar('bufnr',-1)
+    let l:resizeval = float2nr(l:h * self.winheight)
+    call win_execute(bufwinid(l:bufnr),
+          \'resize ' . l:resizeval)
+
+    call ide#debugmsg('bar['.self.id.'].resizeWidgets',
+          \' resizing (' . key . ') to ' . l:resizeval)
+
+    if has_key(self.widgets[key], 'opened')
+      call self.widgets[key].opened()
+    endif
+  endfor
+
+  if len(keys(self.widgets)) > 1
+    " some widgets take up all the space available
+    " such as terminal window, so resizing it to 1
+    " will actually resize the whole bar to 1
+    call win_execute(self.getWinid(), 'resize 1') 
+  endif
+  return
   
   for key in keys(self.widgets)
     if has_key(self.widgets[key], 'opened')
-      call ide#debugmsg("bar.openWidgets.opened", "widget " . key)
+      call ide#debugmsg('bar['. self.id . '].resizeWidgets',
+            \'calling opened()')
       call self.widgets[key].opened()
     endif
     let l:h = self.widgets[key].getvar('minheightpct', -1)
     if l:h != -1
-      echom "height is " . l:h
-      let l:bufnr = self.widgets[key].getvar('bufnr',-1)
-      call win_execute(bufwinid(l:bufnr), 
-            \'resize ' . float2nr(l:h * &lines))
+      call ide#debugmsg('bar['. self.id . '].resizeWidgets',
+            \"resizing widget for barid " . self.id 
+            \." minweightpct = " . l:h
+            \."        lines =  " . &lines )
+      "let l:bufnr = self.widgets[key].getvar('bufnr',-1)
+      "call win_execute(bufwinid(l:bufnr), 
+      "      \'resize ' . float2nr(l:h * self.winheight))
     endif
   endfor
+  call win_execute(self.getWinid(), 'resize 1') 
 endfun
 
 fun! s:Bar.closeWidgets()
-  call ide#debugmsg("bar.closeWidgets",
+  call ide#debugmsg('bar['. self.id . '].closeWidgets',
         \"closing widgets for bar " . self.id
         \." layoutid " . self.layoutid)
   for key in keys(self.widgets)
-    call ide#debugmsg("bar.closeWidgets", "widget " . key)
+    call ide#debugmsg('bar['. self.id . '].closeWidgets',
+      \ 'closing widget ' . key)
     call self.widgets[key].run_event('close', #{barid: self.id})
   endfor
 endfun
