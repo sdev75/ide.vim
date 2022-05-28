@@ -227,21 +227,38 @@ fun! s:Bar.openWidgets()
 endfun
 
 fun! s:Bar.resizeWidgets()
+
+  " nothing to do if there are no widgets, right?
   if len(keys(self.widgets)) == 0
     call ide#debugmsg('bar['. self.id . '].resizeWidgets',
           \"no widgets to resize, no work to do. Bye")
     return
   endif
+ 
+  " if there is only one widget
+  " it's wise not to resize the only space available to 1
+  if len(keys(self.widgets)) > 1
+    " some widgets take up all the space available
+    " such as terminal window, so resizing it to 1
+    " will actually resize the whole bar to 1
+    call win_execute(self.getWinid(), 'resize 1') 
+  endif
+ 
+  " time to iterate each widgets and do the work
   for key in keys(self.widgets)
-    let l:h = self.widgets[key].getvar('minheightpct', 1)
-    echom " !! calculated height = " . l:h
-    echom " !! bar winheight     = " . self.winheight
-    
-    " resize widget
+    " collect all the information needed to do proper resizing
     let l:bufnr = self.widgets[key].getvar('bufnr',-1)
+    let l:h = self.widgets[key].getvar('minheightpct', 1)
     let l:resizeval = float2nr(l:h * self.winheight)
-    call win_execute(bufwinid(l:bufnr),
-          \'resize ' . l:resizeval)
+    
+    let l:debug_str = 
+          \ ' minheightpct = ' . l:h .
+          \ ' bar winheight = ' . self.winheight .
+          \ ' resizeval = ' . l:resizeval .
+          \ ' bufnr = ' . l:bufnr .
+          \ ' key = ' . key
+    "call input(l:debug_str)
+    call win_execute(bufwinid(l:bufnr),'resize ' . l:resizeval)
 
     call ide#debugmsg('bar['.self.id.'].resizeWidgets',
           \' resizing (' . key . ') to ' . l:resizeval)
@@ -250,33 +267,6 @@ fun! s:Bar.resizeWidgets()
       call self.widgets[key].opened()
     endif
   endfor
-
-  if len(keys(self.widgets)) > 1
-    " some widgets take up all the space available
-    " such as terminal window, so resizing it to 1
-    " will actually resize the whole bar to 1
-    call win_execute(self.getWinid(), 'resize 1') 
-  endif
-  return
-  
-  for key in keys(self.widgets)
-    if has_key(self.widgets[key], 'opened')
-      call ide#debugmsg('bar['. self.id . '].resizeWidgets',
-            \'calling opened()')
-      call self.widgets[key].opened()
-    endif
-    let l:h = self.widgets[key].getvar('minheightpct', -1)
-    if l:h != -1
-      call ide#debugmsg('bar['. self.id . '].resizeWidgets',
-            \"resizing widget for barid " . self.id 
-            \." minweightpct = " . l:h
-            \."        lines =  " . &lines )
-      "let l:bufnr = self.widgets[key].getvar('bufnr',-1)
-      "call win_execute(bufwinid(l:bufnr), 
-      "      \'resize ' . float2nr(l:h * self.winheight))
-    endif
-  endfor
-  call win_execute(self.getWinid(), 'resize 1') 
 endfun
 
 fun! s:Bar.closeWidgets()

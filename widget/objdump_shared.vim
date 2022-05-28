@@ -19,7 +19,7 @@ fun! s:widget.constructor(widget, payload)
     call win_execute(bufwinid(l:bufnr), 'close!')
   endif
 
-  call self.setvar('minheightpct', 0.6)
+  call self.setvar('minheightpct', 0.5)
 endfun
 
 fun! s:widget.open(widget, payload)
@@ -40,7 +40,6 @@ fun! s:widget.open(widget, payload)
   let l:winbar = "nnoremenu 1.10 WinBar.Assembly :NONE<CR>"
   call win_execute(bufwinid(l:bufnr), l:winbar)
   call self.setvar('bufnr', l:bufnr)
-  call self.setHeightPct(bufwinid(l:bufnr), 0.6)
 endfun
 
 fun! s:widget.opened()
@@ -94,7 +93,6 @@ fun! s:trydisasm()
   "endif
   "let l:bufnr = g:Ide.getLayout().mainBufnr
   let l:bufnr = g:Ide.getLayout().getvar('originBufnr', -1)
-  echom bufname(l:bufnr)
   let l:ext = fnamemodify(bufname(l:bufnr),':e')
   if l:ext != 'c' | return | endif
   call ide#debugmsg("trydisasm", "mainbufnr is " . l:bufnr) 
@@ -141,7 +139,7 @@ fun! s:gotoline()
   let l:str = "g/" . expand('%:t') . ":" . line('.') . "$/"
   call win_execute(bufwinid(l:bufnr), 'set hlsearch')
   call win_execute(bufwinid(l:bufnr), l:str)
-  call win_execute(bufwinid(l:bufnr), 'setlocal scrolloff=10')
+  call win_execute(bufwinid(l:bufnr), 'setlocal scrolloff=20')
   call win_execute(bufwinid(l:bufnr), 'redraw')
 endfun
 endif

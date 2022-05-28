@@ -109,8 +109,9 @@ fun! s:Layout.draw(idx, val)
   call self.bars[1].resize()
 
   for i in range(0, 3)
-    call self.bars[i].resizeWidgets()
+    "call self.bars[i].resizeWidgets()
   endfor
+  call self.bars[3].resizeWidgets()
   "call self.resizeWidgets()
   "call self.bars[1].resizeWidgets()
   "for i in range(0, 3)

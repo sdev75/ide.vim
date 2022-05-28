@@ -1,5 +1,5 @@
-let s:widgetid = 'symtable_shared'
-let s:buf_prefix = 'ide_widget_symtable_'
+let s:widgetid = 'relocs_shared'
+let s:buf_prefix = 'ide_widget_relocs_'
 let s:widget = g:IdeWidget.new(s:widgetid)
 
 fun! s:widget.constructor(widget, payload)
@@ -22,7 +22,7 @@ fun! s:widget.open(widget, payload)
   let l:barid = a:widget.barid
   let l:bar = g:Ide.getLayout(l:layoutid).getBar(l:barid)
 
-  call ide#debugmsg("symtable.open",
+  call ide#debugmsg("relocs.open",
         \ " bufnr " . l:bufnr
         \ . " bufname " . l:bufname
         \ . " layoutid " . l:layoutid
@@ -30,7 +30,7 @@ fun! s:widget.open(widget, payload)
         \ . " bar.winid " . l:bar.getWinid())
   
   call win_execute(l:bar.getWinid(), 'sb ' . l:bufnr)
-  let l:winbar = "nnoremenu 1.10 WinBar.Symbols :NONE<CR>"
+  let l:winbar = "nnoremenu 1.10 WinBar.Relocations :NONE<CR>"
   call win_execute(bufwinid(l:bufnr), l:winbar)
   call self.setvar('bufnr', l:bufnr)
 endfun
@@ -44,7 +44,7 @@ fun! s:widget.close(widget, payload)
   let l:bufname = s:buf_prefix . 'shared'
   let l:bufnr = bufnr(l:bufname)
   let l:winid = bufwinid(l:bufnr)
-  call ide#debugmsg("symtable.close",
+  call ide#debugmsg("relocs.close",
         \ " layoutid " . l:layoutid
         \ . " bufname " . l:bufname
         \ . " bufnr " . l:bufnr
@@ -67,7 +67,7 @@ endfun
 call g:IdeWidget.register(s:widget)
 
 if !empty(g:IdeWidget.get(s:widgetid))
-augroup ide_widget_symtable
+augroup ide_widget_relocs
   autocmd!
   "autocmd User IdeWidgetOpen call s:try()
   autocmd User IdeCInit call s:do()
@@ -97,7 +97,7 @@ fun! s:do_(filename)
         \.getBar(l:barid).getWidget(s:widgetid)
   let l:makefile = g:IdeC.makefile_vars['makefile']
   let l:vars = #{FILENAME:a:filename}
-  let l:buf = makefile#runcmd(l:makefile, 'objdump-syms_', l:vars)
+  let l:buf = makefile#runcmd(l:makefile, 'readelf-relocs_', l:vars)
   let l:payload = #{
         \filename: a:filename,
         \winid: win_getid(),

@@ -33,7 +33,7 @@ $(OUTPUT_DIR):
 #	echo objdump -D $(basename $(FILENAME)).o -M intel -j .text -l
 #
 objdump-dwarf_: $(FILENAME_OUT)
-	objdump -dj .text -M intel $< -l
+	objdump --disassemble --reloc -j .text -M intel $< -l
 #
 #objdump_symtable_: $(basename $(FILENAME)).o
 #	echo objdump -t $<
@@ -41,4 +41,8 @@ objdump-dwarf_: $(FILENAME_OUT)
 readelf-syms_: $(FILENAME_OUT)
 	readelf -s $(FILENAME_OUT)
 
+objdump-syms_: $(FILENAME_OUT)
+	objdump -tr $(FILENAME_OUT)
 
+readelf-relocs_: $(FILENAME_OUT)
+	readelf -r $(FILENAME_OUT)
