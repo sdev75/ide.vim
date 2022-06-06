@@ -1,10 +1,12 @@
 let s:Widget = {}
 let g:IdeWidget = s:Widget
 
+" Reserved for future use
 let s:Flags = {}
 let g:WidgetFlags = s:Flags
 let s:Flags.DUMMY = 1
 
+" List of public and private scoped events
 let s:Events = #{
       \constructor:1,
       \destructor:1,
@@ -12,20 +14,22 @@ let s:Events = #{
       \close:1,
       \update:1
       \}
+" List of events with public scope
 let s:PublicEvents = #{
       \open:1,
       \close:1,
       \update:1
       \}
-let s:widgets = {}
 
-fun! s:Widget.register(widget)
-  let s:widgets[a:widget.id] = a:widget
-endfun
+"let s:widgets = {}
 
-fun! s:Widget.get(widgetid)
-  return get(s:widgets, a:widgetid, {})
-endfun
+"fun! s:Widget.register(widget)
+"  let s:widgets[a:widget.id] = a:widget
+"endfun
+"
+"fun! s:Widget.get(widgetid)
+"  return get(s:widgets, a:widgetid, {})
+"endfun
 
 fun! s:Widget.new(id)
   let l:obj = copy(self)
@@ -37,36 +41,52 @@ fun! s:Widget.new(id)
 endfun
 
 fun! s:Widget.run_event_(event_name, payload)
-  " execute parent callback
-  let l:res = self[a:event_name.'_'](a:payload)
-  "execute "let l:res = self['" . a:event_name . "_']()"
-  if l:res == -1
-    " stop propagation if return value is -1
-    call ide#debugmsg("widget.run_event_", "Stopping propagation for " . a:event_name)
-    return
+  call ide#debug(3, "Widget.run_event_",
+        \ "event_name " . a:event_name)
+
+  let l:funcname = a:event_name . "_"
+  
+  " Execute parent callback if it exists
+  if has_key(self, l:funcname)
+    call ide#debug(5, "Widget.run_event_",
+          \ "Executing parent callback for " . l:funcname)
+    " execute parent callback
+    let l:res = self[a:event_name.'_'](a:payload)
+    if l:res == -1
+      " stop propagation if return value is -1
+      call ide#debug(5, "Widget.run_event_",
+            \ "Stopping propagation for '" . a:event_name . "'")
+      return
+    endif
   endif
-  " execute any callbacks
+  
+  " Execute the actual callback if it exists
   if !has_key(self, a:event_name)
+    call ide#debug(5, "Widget.run_event",
+          \ "Missing callback for '" . a:event_name . "'")
     return
   endif
   return self[a:event_name](self, a:payload)
 endfun
 
 fun! s:Widget.run_event(event_name, payload)
-  call ide#debugmsg('widget[' . self.id . '].run_event',
-        \' event = ' . a:event_name)
-  if !has_key(s:PublicEvents, a:event_name)
-    echoerr 'Invalid event: ' . a:event_name
-    return
-  endif
-  if !self.constructed
+  call ide#debug(5, 'Widget.run_event', 
+        \ "Event '" .  a:event_name . "'" . 
+        \ " called for " . self.id)
+ 
+  " Ensure the event name is a valid one
+  "if !has_key(s:PublicEvents, a:event_name)
+  "  echoerr 'Invalid event: ' . a:event_name
+  "  return
+  "endif
 
-    call ide#debugmsg('widget[' . self.id . '].run_event',
-          \' event = ' . a:event_name . 
-          \' widget requires construction ')
+  " Lazy construct widgets if they aren't already
+  if !self.constructed
+    call ide#debug(3, "Widget.run_event", 
+          \ "Constructor required " . self.id)
     let l:res = self.run_event_('constructor', a:payload)
     if l:res == -1
-      echoerr "Constructor failed"
+      echoerr "Failed to construct widget " . self.id
       return -1
     endif
   endif
@@ -74,22 +94,30 @@ fun! s:Widget.run_event(event_name, payload)
 endfun
 
 fun! s:Widget.constructor_(payload)
-  call ide#debugmsg('widget['. self.id . '].constructor_',
-        \'invoked')
+  call ide#debug(3, "Widget.constructor_",
+        \ " Constructor_ called for " . self.id)
+ 
+  " Check if widget has already been constructed
   if self.constructed
-    echoerr "Constructor already called. OH MY"
+    echoerr "Constructor called twice. OH MY"
     return -1
   endif
+
+  " Flag widget as constructed
   let self.constructed = 1
 endfun
 
 fun! s:Widget.destructor_(payload)
-  call ide#debugmsg('widget[' .self.id . '].destructor_', 
-        \"invoked")
+  call ide#debug(3, "Widget.destructor_",
+        \ "Destructor invoked for " . self.id)
+ 
+  " Run the destructor only once
   if !self.constructed
-    echoerr "Destructor already called. OOPS"
+    echoerr "Duplicate call or never constructed before. OOPS"
     return -1
   endif
+
+  " Flag widget accordingly
   let self.constructed = 0
 endfun
 

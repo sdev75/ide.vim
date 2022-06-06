@@ -35,6 +35,7 @@ fun! s:Bar.new(barid, layoutid)
   let l:obj.state_ = 0
   let l:obj.layoutid = a:layoutid
   let l:obj.winheight = 0
+  let l:obj.vars_ = {}
   return l:obj
 endfun
 
@@ -63,10 +64,12 @@ fun! s:Bar.setFlags(flags)
 endfun
 
 fun! s:Bar.open()
-  if self.getWinid()
-    return
-  endif
-  " create empty buffer
+  call ide#debug(3, "Bar.open",
+        \ "Open called for bar " . self.id)
+  if self.getWinid() | return | endif
+  
+  " create empty buffer unique to every bar
+  " format: idebar_{layoutid}_{barid}
   let l:bufname = "idebar_" . self.layoutid . "_" . self.id
   let l:bufnr = bufnr(l:bufname)
   if l:bufnr == -1
@@ -75,34 +78,43 @@ fun! s:Bar.open()
     call setbufvar(l:bufnr, "&bufhidden", "hide")
     call setbufvar(l:bufnr, "&swapfile", 0)
     call setbufvar(l:bufnr, "&buflisted", 0)
-    call setbufvar(l:bufnr, "&filetype", "idebuf")
+    call setbufvar(l:bufnr, "&filetype", "idebar")
+    call setbufvar(l:bufnr, "&number", 0)
+    
+    call ide#debug(3, "Bar.open",
+          \ "new buffer created " . l:bufname .
+          \ " nr " . l:bufnr)
   endif
 
-  call ide#debugmsg('bar['.self.id.'].open BEGIN',
-        \" layoutid " . self.layoutid .
-        \" bufnr " . l:bufnr .
-        \" winid " . self.getWinid())
-
+  " Silently switch to bar buffer
   execute 'silent! sb' . l:bufnr
-  call setbufvar(l:bufnr, "&number", 0)
+  
+  " Set bar window fixed dimensions
   let l:winid = win_getid()
   call win_execute(l:winid, 'set winfixwidth')
   call win_execute(l:winid, 'set winfixheight')
+
+  " Store the winid for future use
   call self.setWinid(l:winid)
-  
-  call ide#debugmsg('bar['.self.id.'].open END',
-        \" layoutid " . self.layoutid .
-        \" bufnr " . l:bufnr .
-        \" winid " . self.getWinid())
+ 
+  call ide#debug(3, "Bar.open",
+        \ "opened bar " . self.id .
+        \ " bufnr " . l:bufnr .
+        \ " winid " . l:winid)
 endfun
 
 fun! s:Bar.close()
-  call self.onCallback('close')
+  call ide#debug(3, "Bar.close",
+        \ "Close for bar " . self.id)
+  "call self.onCallback('close')
   call win_execute(self.winid, 'close!')
-  let self.winid = -1
+  call self.setWinid(-1)
+  call self.setvar('hidden',0)
 endfun
 
 fun! s:Bar.toggle()
+  call ide#debug(3, "Bar.toggle",
+        \ "Toggle called for bar " . self.id)
   if self.getWinid()
     call self.close()
     return
@@ -111,6 +123,9 @@ fun! s:Bar.toggle()
 endfun
 
 fun! s:Bar.align()
+  call ide#debug(3, "Bar.align",
+        \ "Align called for bar " . self.id)
+  
   let l:winid = self.getWinid()
   if !l:winid | return | endif
 
@@ -136,12 +151,15 @@ fun! s:Bar.align()
     let l:aligntype = 'TOP'
     return
   endif
-  
-  call ide#debugmsg('bar[' . self.id . '].align',
-        \ ' aligning using ' .  l:aligntype)
+ 
+  call ide#debug(3, "Bar.align",
+        \ "Bar aligned to " . l:aligntype)
 endfun
 
 fun! s:Bar.resize()
+  call ide#debug(3, "Bar.resize",
+        \ "Resize called for bar " . self.id)
+
   let l:winid = self.getWinid()
   if !l:winid | return | endif
 
@@ -156,126 +174,181 @@ fun! s:Bar.resize()
   " Saving this value will allow proper resizing of 
   " each widgets contained within each bar.
   let self.winheight = winheight(win_id2win(self.getWinid()))
-  
-  call ide#debugmsg('bar['.self.id.'].resize',
-        \' width = ' . l:width . 
-        \' winheight = ' . self.winheight)
+ 
+  call ide#debug(3, "Bar.resize",
+        \ "Bar width " . l:width .
+        \ " height " . self.winheight)
+endfun
+
+fun! s:Bar.calcHeight()
+  call ide#debug(3, "Bar.calcHeight",
+        \ "Calculating height for bar " . self.id)
+
+  if and(self.flags, s:Flags.VERT)
+    " Using vertical space, height is the whole window
+    let self.winheight = &lines
+  else
+    let self.winheight = float2nr(
+          \ (self.width_pct / 100.00) * &columns)
+  endif
+
+  call ide#debug(3, "Bar.calcHeight",
+        \ "Calculated height " . self.winheight)
 endfun
 
 fun! s:Bar.getMinWidth()
   return float2nr((self.width_pct / 100.00) * &columns)
 endfun
 
-fun! s:Bar.setCallback(type, callback)
-  let self.callbacks[a:type] = a:callback
-endfun
+"fun! s:Bar.setCallback(type, callback)
+"  let self.callbacks[a:type] = a:callback
+"endfun
 
 fun! s:Bar.onCallback(type)
   if has_key(self.callbacks, a:type)
+    call ide#debug(3, "Bar.onCallback",
+          \ "Callback " . a:type . " called for bar " . self.id)
     call self.callbacks[a:type]()
   endif
 endfun
 
-fun! s:Bar.addWidget(widget)
-  let l:id = a:widget['id']
-  let self.widgets[l:id] = a:widget
-  call ide#debugmsg('bar[' . self.id . '].addWidgets',
-        \" layoutid = " . self.layoutid .
-        \" widget id =" . a:widget.id .
-        \" widget layoutid = " . a:widget.layoutid .
-        \" widget barid = " . a:widget.barid)
-endfun
-
-fun! s:Bar.getWidget(id)
-  if has_key(self.widgets,a:id)
-    return self.widgets[a:id]
-  endif
-  return 0
-endfun
-
-fun! s:Bar.getWidgets()
-  return self.widgets
-endfun
-
 fun! s:Bar.openWidgets()
-  call ide#debugmsg('bar[' . self.id . '].openWidgets',
-        \'\n bar winid = ' . self.getWinid() .
-        \'\n bar winnr = ' . win_id2win(self.getWinid()) .
-        \'\n bar height = ' . winheight(win_id2win(self.winid))
-        \)
-  
-  if len(keys(self.widgets)) == 0
-    call ide#debugmsg('bar[' . self.id . '].openWidgets',
-          \"no widgets to open, aborting")
+  call ide#debug(3, "Bar.openWidgets",
+        \ "Opening widgets for bar " . self.id)
+
+  let l:widgets = g:IdeBars.getWidgetInstances(self)
+
+  if len(l:widgets) == 0
+    call ide#debug(3, "Bar.openWidgets",
+          \ "There are no widgets to open. Bye")
     return
   endif
   
-  " open each individual widgets
-  for key in keys(self.widgets)
-    call self.widgets[key].run_event('open', #{barid: self.id})
+  " Open each individual widgets
+  for instance in l:widgets
+    call ide#debug(3, "Bar.openWidgets",
+          \ "Opening widget " . instance.widgetid)
+   
+    call instance.widget.run_event('open',
+          \ #{ barid: self.id })
   endfor
-
-  " resize window placeholder so all the widgets can be 
-  " resized to fit correctly
-  " this is done at the end because the previos operation
-  " require 'room' to open the widgets first
-  "call win_execute(self.getWinid(), 'resize 0') 
- 
-
-  " resize all widgets
-  "call self.resizeWidgets()
 endfun
 
 fun! s:Bar.resizeWidgets()
+  call ide#debug(3, "Bar.resizeWidgets",
+        \ "Resize wdigets for bar " . self.id)
+
+  let l:widgets = g:IdeBars.getWidgetInstances(self)
 
   " nothing to do if there are no widgets, right?
-  if len(keys(self.widgets)) == 0
-    call ide#debugmsg('bar['. self.id . '].resizeWidgets',
-          \"no widgets to resize, no work to do. Bye")
+  if len(l:widgets) == 0
+    call ide#debug(3, "Bar.resizeWidgets",
+          \ "There are not widgets to resize. Bye")
+    " The bar does not have any widgets but it has to be resized
+    " Resize the BAR itself, either vertically or horizontally
+    call self.resize()
     return
   endif
  
+  " Start to resize from BOTTOM to TOP
+  "let l:widgets = reverse(copy(l:widgets))
+  
   " if there is only one widget
   " it's wise not to resize the only space available to 1
-  if len(keys(self.widgets)) > 1
+  if len(l:widgets) > 1
     " some widgets take up all the space available
     " such as terminal window, so resizing it to 1
     " will actually resize the whole bar to 1
-    call win_execute(self.getWinid(), 'resize 1') 
+    "call win_execute(self.getWinid(), 'resize 1') 
+    call win_execute(self.getWinid(), 'close!')
+    call self.setvar('hidden', 1)
   endif
- 
-  " time to iterate each widgets and do the work
-  for key in keys(self.widgets)
-    " collect all the information needed to do proper resizing
-    let l:bufnr = self.widgets[key].getvar('bufnr',-1)
-    let l:h = self.widgets[key].getvar('minheightpct', 1)
-    let l:resizeval = float2nr(l:h * self.winheight)
+  
+  let l:sum = 0.00
+  let l:resizeval = 0.00
+  " Iterate each widget and do the work
+  for instance in l:widgets
+    call ide#debug(4, "Bar.resizeWidgets",
+          \ "Resizing widget " . instance.widgetid)
     
-    let l:debug_str = 
-          \ ' minheightpct = ' . l:h .
-          \ ' bar winheight = ' . self.winheight .
-          \ ' resizeval = ' . l:resizeval .
-          \ ' bufnr = ' . l:bufnr .
-          \ ' key = ' . key
-    "call input(l:debug_str)
-    call win_execute(bufwinid(l:bufnr),'resize ' . l:resizeval)
-
-    call ide#debugmsg('bar['.self.id.'].resizeWidgets',
-          \' resizing (' . key . ') to ' . l:resizeval)
-
-    if has_key(self.widgets[key], 'opened')
-      call self.widgets[key].opened()
+    let l:widget = instance.widget
+    
+    " collect all the information needed to do proper resizing
+    let l:bufnr     = widget.getvar('bufnr',-1)
+    if l:bufnr == -1
+      echoerr "Widget bufnr is invalid"
+      return -1
     endif
+    let l:heightpct = widget.getvar('minheightpct', 1)
+    
+    " Workaround to decrement bottom bar from total resizeval
+    let l:winheight = self.winheight
+    if self.id != 1
+      " Get bottom bar height
+      let l:bar = g:Ide.getLayout(self.layoutid).getBar(1)
+      if l:bar.state_ == 1
+        call ide#debug(4, "Bar.resizeWidgets",
+              \ "Warning: Using local winheight!")
+        let l:t = g:IdeBars.getWinHeight(l:bar)
+        let l:winheight = l:winheight - l:t
+      endif
+    endif
+    
+    let l:resizeval = float2nr(l:heightpct * l:winheight) - 2
+
+    let l:diff = l:winheight - l:sum
+    let l:sum = l:sum + l:resizeval
+    
+    if l:resizeval > l:diff
+      call ide#debug(4, "Bar.resizeWidgets",
+            \ "Widget height is overflowing." . 
+            \ " sum " . l:sum .
+            \ " actual winheight " . self.winheight .
+            \ " local winheight " . l:winheight .
+            \ " diff left " . l:diff)
+      let l:resizeval = l:diff
+    endif
+
+    call win_execute(bufwinid(l:bufnr),'resize ' . l:resizeval)
+    
+    call ide#debug(4, "Bar.resizeWidgets",
+          \ "widget " . l:widget.id .
+          \ " minheightpct " . l:heightpct .
+          \ " bar winheight " . self.winheight .
+          \ " bar local winheight " . l:winheight .
+          \ " resizeval " . l:resizeval .
+          \ " bufnr " . l:bufnr .
+          \ " sum " . l:sum .
+          \ " diff left " . l:diff)
+    
+    let l:bufwinid = bufwinid(l:bufnr)
+    call ide#debug(4, "Bar.resizeWidgets",
+          \ "win_execute(" . l:bufwinid .
+          \ ", resize " . l:resizeval . ")")
+
+    if has_key(widget, 'opened')
+      call widget.opened()
+    endif
+
   endfor
 endfun
 
 fun! s:Bar.closeWidgets()
-  call ide#debugmsg('bar['. self.id . '].closeWidgets',
-        \"closing widgets for bar " . self.id
-        \." layoutid " . self.layoutid)
-  for key in keys(self.widgets)
-    call ide#debugmsg('bar['. self.id . '].closeWidgets',
-      \ 'closing widget ' . key)
-    call self.widgets[key].run_event('close', #{barid: self.id})
+  call ide#debug(3, "Bar.closeWidgets",
+        \ "Close widgets for bar " . self.id)
+  
+  for instance in g:IdeBars.getWidgetInstances(self)
+    call ide#debug(4, "Bar.closeWidgets",
+          \ "Closing widget " . instance.widgetid)
+    call instance.widget.run_event("close",
+          \ #{ barid: self.id})
   endfor
+endfun
+
+fun! s:Bar.setvar(key, val)
+  let self.vars_[a:key] = a:val
+endfun
+
+fun! s:Bar.getvar(key, default)
+  return get(self.vars_, a:key, a:default)
 endfun

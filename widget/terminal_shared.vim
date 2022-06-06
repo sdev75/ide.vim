@@ -1,5 +1,4 @@
 let s:widget = g:IdeWidget.new('terminal_shared')
-
 let s:buf_prefix = 'ide_widget_term_'
 
 fun! s:widget.constructor(widget, payload)
@@ -46,6 +45,7 @@ fun! s:widget.open(widget, payload)
         \ . " bar.winid " . l:bar.getWinid())
   
   call win_execute(l:bar.getWinid(), 'b ' . l:bufnr)
+  call self.setvar('bufnr', l:bufnr)
 endfun
 
 fun! s:widget.close(widget, payload)
@@ -62,5 +62,5 @@ fun! s:widget.close(widget, payload)
   call win_execute(l:winid, 'close!')
 endfun
 
-call g:IdeWidget.register(s:widget)
+call g:IdeWidgets.register(s:widget)
 

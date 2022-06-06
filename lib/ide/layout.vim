@@ -2,14 +2,14 @@ let s:Layout = {}
 let g:IdeLayout = s:Layout
 
 let s:MapStickySeq = [
-      \[3,2,1,0], [2,0,1,3], [0,3,2,1], [2,1,3,0] ]
+      \ [3,2,1,0], [2,0,1,3], [0,3,2,1], [2,1,3,0] ]
 let s:MapIndex = ["left","bottom","top","right"]
 let s:Map = #{
-      \left:    #{ idx: 0, flags: g:IdeBarFlags.LEFT  },
-      \bottom:  #{ idx: 1, flags: g:IdeBarFlags.BOTTOM },
-      \top:     #{ idx: 2, flags: g:IdeBarFlags.TOP },
-      \right:   #{ idx: 3, flags: g:IdeBarFlags.RIGHT }
-      \}
+      \ left:    #{ idx: 0, flags: g:IdeBarFlags.LEFT  },
+      \ bottom:  #{ idx: 1, flags: g:IdeBarFlags.BOTTOM },
+      \ top:     #{ idx: 2, flags: g:IdeBarFlags.TOP },
+      \ right:   #{ idx: 3, flags: g:IdeBarFlags.RIGHT }
+      \ }
 
 fun! s:getBarWidthPct(pos)
   let l:key = substitute(a:pos, '^.', 'IdeBarMinWidthPct\u&', '')
@@ -17,15 +17,24 @@ fun! s:getBarWidthPct(pos)
 endfun
 
 fun! s:Layout.new(layoutid)
-  call ide#debugmsg("layout.new", "layoutid " . a:layoutid)
   let l:obj = deepcopy(self)
   let l:obj.id = a:layoutid
   call l:obj['init_'](a:layoutid)
   return l:obj
 endfun
 
+" Return list of widgets that belong to this layout
+" including widgets that are applied to all layouts (-1)
+fun! s:Layout.getWidgetInstances()
+  return filter(copy(g:IdeWidgets.getInstances()),
+        \ "v:val.layoutid == -1 || v:val.layoutid == " . self.id)
+endfun
+
 fun! s:Layout.init_(layoutid)
-  " Left, Right, Bottom, Top, ...
+  call ide#debug(2, "Layout.init_",
+        \ "Initializing layout " . a:layoutid
+        \ )
+  
   let self.map = deepcopy(s:Map)
   let self.bars = []
   let self.vars_ = {}
@@ -36,111 +45,143 @@ fun! s:Layout.init_(layoutid)
     call l:bar.setWidthPct(s:getBarWidthPct(l:pos))
     call add(self.bars, l:bar)
   endfor
-  " init widgets
-  call ide#debugmsg("layout.init_", "initing widgets layoutid " . self.id)
-  let l:widgets = g:Ide.getWidgets()
-  for widgetid in keys(l:widgets)
-    for item in l:widgets[widgetid]
-      " -1 equals the widget should be constructed for every layout's instance
-      if item.layoutid == -1
-        call ide#debugmsg("layout.init_", "add widget " . item.widgetid)
-        call self.addWidget_(item.widgetid, item.position)
-        continue
-      endif
-      " add widget to the matching layout id
-      if item.layoutid == self.id
-        call ide#debugmsg("layout.init_", "add widget (layout match) " . item.widgetid)
-        call self.addWidget_(item.widgetid, item.position)
-      endif
-    endfor
+ 
+  call ide#debug(2, "Layout.init_",
+        \ "Initializing layout's widgets")
+
+  " Initialize all layout's widgets
+  " When a widget instance has layout set to -1
+  " it means that it will be available on all layouts
+  for instance in self.getWidgetInstances()
+    " Skip deepcopy if instance has already been copied
+    if !empty(instance.widget)
+      continue
+    endif
+
+    " Grab the widget from the registry
+    " All widgets are registered when loaded
+    " If a widget is not registered, it is simply not 
+    " available for use and an error shows up
+    let l:widget = g:IdeWidgets.get(instance.widgetid)
+    if empty(l:widget)
+      return -1
+    endif
+
+    " All instances are lazy loaded when a layout
+    " is created
+    call ide#debug(3, "Layout.init_",
+          \ "Deepcopying instance for " . instance.widgetid)
+
+    " Deepcopy the widget using instance metadata
+    let l:widget_copy           = deepcopy(l:widget)
+    let l:widget_copy.layoutid  = instance.layoutid
+    let l:widget_copy.barid     = instance.barid
+     
+    " Assign unique widget to current instance
+    let instance.widget = l:widget_copy
   endfor
-  for item in values(l:widgets)
-  endfor
+
 endfun
 
+" Draw is called whenever a bar is toggled
+" Idx is the actual barid or bad index
+" Val is the status, 0 when closing and 1 when opening
 fun! s:Layout.draw(idx, val)
+  call ide#debug(4, "Layout.draw",
+        \ "Draw idx " . a:idx .
+        \ " val " . a:val)
+
+  " Close all opened bars and widgets
   for i in range(0, 3)
+    call ide#debug(4, "Layout.draw",
+          \ " bar " . i . " state " . self.bars[i].state_)
+    " state_ is an internal flag used to
+    " determine whether a bar is visible or not
+    " state_ == 0 the widget is already closed
     if self.bars[i].state_ == 0 
       continue
     endif
     call self.bars[i].closeWidgets()
     call self.bars[i].close()
   endfor
+
+  " Set the state of the current bar
+  " When Opening the state will be flagged as OPEN
   let self.bars[a:idx].state_= a:val
+
+  " Open all bars were flagged as OPEN
+  " This will reopen previously flagged bars
   for i in range(0, 3)
-    if self.bars[i].state_ == 1
-      call self.bars[i].open()
-      "call self.bars[i].openWidgets()
-      "call self.resizeWidgets()
+    if self.bars[i].state_ == 0
+      continue
     endif
+    call self.bars[i].open()
   endfor
 
+  " Align all bars
   call self.alignBars()
-  " open widgets and resize them
-  " this will mess up bars dimensions, so another resizBars 
-  " call is necessary
-  
+
+  " Calculate the hight of each bar
+  " without actually resizing 
+  " Actual resizing is done during widget resizing
+  " as each buffer resize will affect each other 
   for i in range(0, 3)
-    " call self.bars[i].resizeWidgets()
-    "call self.bars[i].openWidgets()
-    call self.bars[i].resize()
+    call self.bars[i].calcHeight()
   endfor
-  " resize once again, enforce dimensions
-  "for i in range(0, 3)
-  "  call self.bars[i].resizeWidgets()
-  "endfor
- 
-  " open all widgets for each bar
+
+  " Construct and open all widgets
+  " No resizing takes place at this point
   for i in range(0, 3)
-    " call self.bars[i].resizeWidgets()
+    if self.bars[i].state_ == 0
+      continue
+    endif
     call self.bars[i].openWidgets()
   endfor
- " call self.bars[3].openWidgets()
-  "call self.bars[1].openWidgets()
-  
-  call ide#debugmsg('layout['.self.id.'].draw',
-        \' bar1 height = ' . self.bars[1].winheight .
-        \' bar3 height = ' . self.bars[3].winheight)
- 
-  " resize bottom bar first
-  " the order matters as the bottom bar 
-  " alters the total &lines value and will need to 
-  " be recalculated correctly when resizing widgets
-  call self.bars[1].resize()
 
-  for i in range(0, 3)
-    "call self.bars[i].resizeWidgets()
+  " Resize all widgets from BOTTOM to TOP
+  " Why? When a buffer is resized the other buffers
+  " below it will be affected and resize as well
+  for i in [0, 2, 1, 3]
+    if self.bars[i].state_ == 0 
+      continue
+    endif
+    call self.bars[i].resizeWidgets()
   endfor
-  call self.bars[3].resizeWidgets()
-  "call self.resizeWidgets()
-  "call self.bars[1].resizeWidgets()
-  "for i in range(0, 3)
-  "  if self.bars[i].state_ == 1
-  "    call self.bars[i].openWidgets()
-  "    call self.resizeWidgets()
-  "  endif
-  "endfor
 
 endfun
 
 fun! s:Layout.openBar(idx)
+  call ide#debug(4, "Layout",
+        \ "openBar() for " . a:idx)
   call self.setvar('originBufnr', bufnr())
   call self.setvar('originWinid', win_getid())
   call self.draw(a:idx, 1)
 endfun
 
 fun! s:Layout.closeBar(idx)
+  call ide#debug(4, "Layout",
+        \ "closeBar() for " . a:idx)
   call self.draw(a:idx, 0)
 endfun
 
 fun! s:Layout.toggleBar(pos)
-  let l:item = get(self.map, a:pos)
-  let l:idx = l:item.idx
-  if self.bars[l:idx].getWinid()
-    call self.closeBar(l:idx)
+  call ide#debug(4, "Layout",
+        \ "toggleBar() for " . a:pos)
+  let l:barid = self.getBarId(a:pos)
+  if self.bars[l:barid].getWinid()
+    call self.closeBar(l:barid)
     return
   endif
-  call self.openBar(l:idx)
+
+  " Some bars are flagged as hidden to make space for
+  " widgets. This is a workaround and might be improved
+  " in the future
+  if self.bars[l:barid].getvar('hidden', 0) == 1
+    call self.closeBar(l:barid)
+    return
+  endif
+
+  call self.openBar(l:barid)
 endfun
 
 fun! s:Layout.toggleTerminal(pos)
@@ -149,6 +190,11 @@ endfun
 
 fun! s:Layout.getBar(id)
   return self.bars[a:id]
+endfun
+
+fun! s:Layout.getBarPosition(barid)
+  let l:map = filter(copy(s:Map), "v:val['idx'] == " . a:barid)
+  return string(keys(l:map)[0])
 endfun
 
 fun! s:Layout.alignBars()
@@ -190,25 +236,25 @@ fun! s:Layout.getBars()
   return self.bars
 endfun
 
-fun! s:Layout.addWidget_(widgetid, pos)
-  let l:barid = self.getBarId(a:pos)
-  let l:widget = g:IdeWidget.get(a:widgetid)
-  if empty(l:widget)
-    echoerr "Widget not registered with id: " . a:widgetid 
-    return -1
-  endif
+"fun! s:Layout.addWidget_(widgetid, pos)
+"  let l:barid = self.getBarId(a:pos)
+"  let l:widget = g:IdeWidget.get(a:widgetid)
+"  if empty(l:widget)
+"    echoerr "Widget not registered with id: " . a:widgetid 
+"    return -1
+"  endif
+"
+"  let l:widget_copy = deepcopy(l:widget)
+"  let l:widget_copy.layoutid = self.id
+"  let l:widget_copy.barid = l:barid
+"  call self.bars[l:barid].addWidget(l:widget_copy)
+"endfun
 
-  let l:widget_copy = deepcopy(l:widget)
-  let l:widget_copy.layoutid = self.id
-  let l:widget_copy.barid = l:barid
-  call self.bars[l:barid].addWidget(l:widget_copy)
-endfun
-
-fun! s:Layout.getWidgets(pos)
-  let l:item = get(self.map, a:pos)
-  let l:idx = l:item.idx
-  return self.bars[l:idx].getWidgets()
-endfun
+"fun! s:Layout.getWidgets(pos)
+"  let l:item = get(self.map, a:pos)
+"  let l:idx = l:item.idx
+"  return self.bars[l:idx].getWidgets()
+"endfun
 
 fun! s:Layout.setvar(key, val)
   let self.vars_[a:key] = a:val
@@ -218,8 +264,3 @@ fun! s:Layout.getvar(key, default)
   return get(self.vars_, a:key, a:default)
 endfun
 
-" support for multi layouts requires implementation
-augroup IdeLayout
-  autocmd!
-  autocmd User OnVimResized call g:Ide.getLayout().resizeBars()
-augroup END

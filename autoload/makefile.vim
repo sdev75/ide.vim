@@ -101,10 +101,10 @@ endfun
 "endfun
 
 fun! makefile#runcmd_(cmd)
-  call ide#debugmsg('runcmd', a:cmd)
+  "call ide#debugmsg('runcmd', a:cmd)
   let l:res = system(a:cmd)
   if v:shell_error
-    echoerr "An error has occurred: " . v:errmsg
+   " echoerr An error has occurred: ' . v:errmsg
   endif
   return l:res
 endfun

@@ -77,7 +77,6 @@ fun! s:widget.update(widget, payload)
 endfun
 
 call g:IdeWidget.register(s:widget)
-call g:IdeWidgets.register(s:widget)
 
 if !empty(g:IdeWidget.get('objdump_shared'))
 augroup ide_lib_c_objdump

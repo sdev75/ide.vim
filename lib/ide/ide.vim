@@ -3,8 +3,8 @@ let g:Ide = s:Ide
 
 let s:Ide.pluginpath = expand('<sfile>:p:h:h:h')
 let s:Ide.layouts = {}
-let s:Ide.widgets = {}
-let s:Ide.widgets_ = {}
+"let s:Ide.widgets = {}
+"let s:Ide.widgets_ = {}
 
 function! s:Ide.getRootpath()
   return self.rootpath_
@@ -59,29 +59,33 @@ fun! s:Ide.openTerminalAndFocus()
   call win_gotoid(l:bar.getWinid())
 endfun
 
-fun! s:Ide.addWidget(layoutid, position, widgetid)
-  let l:widget = g:IdeWidget.get(a:widgetid)
-  if empty(l:widget)
-    echoerr "Widget was not registered: " . a:widgetid
-    return
-  endif
-  let l:payload = {}
-  let l:payload.layoutid = a:layoutid
-  let l:payload.position = a:position
-  let l:payload.widgetid = l:widget.id
-  if !has_key(self.widgets, l:widget.id)
-    let self.widgets[l:widget.id] = []
-  endif
-  call add(self.widgets[l:widget.id], payload)
-  "let self.widgets[l:widget.id] = l:payload
-endfun
-
-fun! s:Ide.getWidgets()
-  return self.widgets
-endfun
-
-fun! s:Ide.getWidget(widgetid)
-  return get(self.widgets, a:widgetid, -1)
+"fun! s:Ide.addWidget(layoutid, position, widgetid)
+"  let l:widget = g:IdeWidget.get(a:widgetid)
+"  if empty(l:widget)
+"    echoerr "Widget was not registered: " . a:widgetid
+"    return
+"  endif
+"  let l:payload = {}
+"  let l:payload.layoutid = a:layoutid
+"  let l:payload.position = a:position
+"  let l:payload.widgetid = l:widget.id
+"  if !has_key(self.widgets, l:widget.id)
+"    let self.widgets[l:widget.id] = []
+"  endif
+"  call add(self.widgets[l:widget.id], payload)
+"  "let self.widgets[l:widget.id] = l:payload
+"endfun
+"
+"fun! s:Ide.getWidgets()
+"  return self.widgets
+"endfun
+"
+"fun! s:Ide.getWidget(widgetid)
+"  return get(self.widgets, a:widgetid, -1)
+"endfun
+"
+fun! s:Ide.init_()
+  call self.getLayout()
 endfun
 
 fun! s:Ide.shutdown_()
@@ -89,6 +93,7 @@ fun! s:Ide.shutdown_()
 endfun
 
 fun! s:Ide.shutdownWidgets_()
+  return
   " iterate through every existing layout
   for layoutid in keys(self.layouts)
     call ide#debugmsg("ide.shutdown_", "cleaning up layoutid " . layoutid)
@@ -114,5 +119,7 @@ endfun
 
 augroup IdeLib
   autocmd!
-  autocmd User OnShutdown call s:Ide.shutdown_() 
+  autocmd User OnIdeInit      call s:Ide.init_()
+  autocmd User OnIdeShutdown  call s:Ide.shutdown_()
+  autocmd User OnIdeResize    call s:Ide.getLayout().resizeBars()
 augroup END

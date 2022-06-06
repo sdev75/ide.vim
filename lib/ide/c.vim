@@ -98,7 +98,6 @@ fun! s:C.init()
   endfor
   let self.makefile_vars = l:makefile_vars
   "let self.makefile_path = fnamemodify(l:parentdir,':p:s?\/$??')
-  doautocmd User IdeCInit
 endfun
 
 fun! s:C.getMakefileVars()

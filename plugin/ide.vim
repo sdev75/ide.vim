@@ -25,8 +25,9 @@ let g:IdeTerminalPos            = get(g:, 'IdeTerminalPos', 'bottom')
 
 augroup Ide
   autocmd!
-  autocmd VimResized * doautocmd User OnVimResized
-  autocmd VimLeavePre * doautocmd User OnShutdown
+  autocmd VimResized  * doautocmd User OnIdeResize
+  autocmd VimEnter    * doautocmd User OnIdeInit
+  autocmd VimLeavePre * doautocmd User OnIdeShutdown
   autocmd FileType c,cpp,h call ide#loadlib('ide/c')
   "autocmd FileType c,cpp,h 
   "      \ call ide#loadlib('ide/c') |

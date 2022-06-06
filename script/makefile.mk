@@ -11,10 +11,6 @@ FILENAME_OBJ := $(basename $(FILENAME_BASE)).o
 FILENAME_OUT := $(addprefix $(OBJDIR), $(FILENAME_OBJ))
 OUTPUT_DIR := $(OBJDIR)$(dir $(FILENAME_BASE))
 
-ifneq ($(TEST_),)
-CFLAGS = $(TEST_)
-endif
-
 printvar_%:
 	@printf "%b" "$($*)"
 
@@ -49,4 +45,7 @@ objdump-syms_: $(FILENAME_OUT)
 	objdump -tr $(FILENAME_OUT)
 
 readelf-relocs_: $(FILENAME_OUT)
-	readelf -r $(FILENAME_OUT)
+	readelf --relocs $(FILENAME_OUT)
+
+readelf-symbols_: $(FILENAME_OUT)
+	readelf --symbols $(FILENAME_OUT)

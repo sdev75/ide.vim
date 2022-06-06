@@ -7,7 +7,9 @@ let g:loaded_ide_autoload = 1
 fun! ide#init()
   runtime lib/ide/buffer.vim
   runtime lib/ide/bar.vim
+  runtime lib/ide/bars.vim
   runtime lib/ide/widget.vim
+  runtime lib/ide/widgets.vim
   runtime lib/ide/layout.vim
   runtime lib/ide/terminal.vim
   runtime lib/ide/ide.vim
@@ -36,6 +38,16 @@ fun! ide#debugmsg(prefix, msg)
     return
   endif
   echom l:msg
+endfun
+
+" The higher the verbosity the more debugging is provided
+fun! ide#debug(level, prefix, msg)
+  if a:level > g:IdeDebugVerbosity
+    return
+  endif
+  let l:msg = "[DEBUG:" . a:level . "][" . a:prefix 
+        \ . "] " .  a:msg
+  execute "normal! :echom \"" . l:msg . "\"\<CR><CR>"
 endfun
 
 fun! ide#initCommands()

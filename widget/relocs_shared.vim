@@ -12,7 +12,7 @@ fun! s:widget.constructor(widget, payload)
     call ide#newBlankBuffer(l:bufname)
   endif
 
-  call self.setvar('minheightpct', 0.2)
+  call self.setvar('minheightpct', 0.25)
 endfun
 
 fun! s:widget.open(widget, payload)
@@ -64,8 +64,10 @@ fun! s:widget.update(widget, payload)
   call appendbufline(l:bufnr, '$', split(a:payload.buf, "\n")) 
 endfun
 
-call g:IdeWidget.register(s:widget)
+call g:IdeWidgets.register(s:widget)
+call ide#debug(4, "Widget", "Loaded " . s:widgetid)
 
+finish
 if !empty(g:IdeWidget.get(s:widgetid))
 augroup ide_widget_relocs
   autocmd!
