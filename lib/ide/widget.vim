@@ -21,16 +21,6 @@ let s:PublicEvents = #{
       \update:1
       \}
 
-"let s:widgets = {}
-
-"fun! s:Widget.register(widget)
-"  let s:widgets[a:widget.id] = a:widget
-"endfun
-"
-"fun! s:Widget.get(widgetid)
-"  return get(s:widgets, a:widgetid, {})
-"endfun
-
 fun! s:Widget.new(id)
   let l:obj = copy(self)
   let l:obj.id = a:id
@@ -90,6 +80,7 @@ fun! s:Widget.run_event(event_name, payload)
       return -1
     endif
   endif
+  
   return self.run_event_(a:event_name, a:payload)
 endfun
 
@@ -122,36 +113,18 @@ fun! s:Widget.destructor_(payload)
 endfun
 
 fun! s:Widget.open_(payload)
-  call self.setvar('open', 1)
+  call ide#debug(3, "Widget",
+        \ "Widget.open_() " . self.id)
+  call g:IdeWidgets.setvar(self, "open", 1)
 endfun
 
 fun! s:Widget.close_(payload)
-  call self.setvar('open', 0)
+  call ide#debug(3, "Widget",
+        \ "Widget.close_() " . self.id)
+  call g:IdeWidgets.setvar(self, "open", 0)
 endfun
 
-fun! s:Widget.update_(payload)
-endfun
-
-fun! s:Widget.setvar(key, val)
-  let self.vars[a:key] = a:val
-endfun
-
-fun! s:Widget.getvar(key, default)
-  return get(self.vars, a:key, a:default)
-endfun
-
-fun! s:Widget.setHeightPct(winid, pct)
-  call win_execute(a:winid,
-        \ 'resize ' . float2nr(a:pct * &lines))
-endfun
-
-fun! s:Widget.createBuffer(bufname)
-    execute 'silent! new'
-    let l:bufnr = bufnr('$')
-    call setbufvar(l:bufnr, "&buflisted", 0)
-    call setbufvar(l:bufnr, '&number', 0)
-    call setbufvar(l:bufnr, '&list', 0)
-    execute 'silent! file ' . l:bufname
-
-    call win_execute(bufwinid(l:bufnr), 'close!')
-endfun
+"fun! s:Widget.setHeightPct(winid, pct)
+"  call win_execute(a:winid,
+"        \ 'resize ' . float2nr(a:pct * &lines))
+"endfun

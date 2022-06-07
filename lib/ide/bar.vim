@@ -65,7 +65,9 @@ endfun
 
 fun! s:Bar.open()
   call ide#debug(3, "Bar.open",
-        \ "Open called for bar " . self.id)
+        \ "Open called for bar " . self.id .
+        \ " winid " . self.getWinid())
+
   if self.getWinid() | return | endif
   
   " create empty buffer unique to every bar
@@ -83,7 +85,7 @@ fun! s:Bar.open()
     
     call ide#debug(3, "Bar.open",
           \ "new buffer created " . l:bufname .
-          \ " nr " . l:bufnr)
+          \ " bufnr " . l:bufnr)
   endif
 
   " Silently switch to bar buffer
@@ -106,7 +108,6 @@ endfun
 fun! s:Bar.close()
   call ide#debug(3, "Bar.close",
         \ "Close for bar " . self.id)
-  "call self.onCallback('close')
   call win_execute(self.winid, 'close!')
   call self.setWinid(-1)
   call self.setvar('hidden',0)
@@ -200,18 +201,6 @@ fun! s:Bar.getMinWidth()
   return float2nr((self.width_pct / 100.00) * &columns)
 endfun
 
-"fun! s:Bar.setCallback(type, callback)
-"  let self.callbacks[a:type] = a:callback
-"endfun
-
-fun! s:Bar.onCallback(type)
-  if has_key(self.callbacks, a:type)
-    call ide#debug(3, "Bar.onCallback",
-          \ "Callback " . a:type . " called for bar " . self.id)
-    call self.callbacks[a:type]()
-  endif
-endfun
-
 fun! s:Bar.openWidgets()
   call ide#debug(3, "Bar.openWidgets",
         \ "Opening widgets for bar " . self.id)
@@ -239,7 +228,7 @@ fun! s:Bar.resizeWidgets()
         \ "Resize wdigets for bar " . self.id)
 
   let l:widgets = g:IdeBars.getWidgetInstances(self)
-
+  
   " nothing to do if there are no widgets, right?
   if len(l:widgets) == 0
     call ide#debug(3, "Bar.resizeWidgets",
@@ -274,12 +263,13 @@ fun! s:Bar.resizeWidgets()
     let l:widget = instance.widget
     
     " collect all the information needed to do proper resizing
-    let l:bufnr     = widget.getvar('bufnr',-1)
+    let l:bufnr     = g:IdeWidgets.getvar(l:widget, 'bufnr',-1)
     if l:bufnr == -1
       echoerr "Widget bufnr is invalid"
       return -1
     endif
-    let l:heightpct = widget.getvar('minheightpct', 1)
+    let l:heightpct = g:IdeWidgets.getvar(l:widget,
+          \ 'minheightpct', 1)
     
     " Workaround to decrement bottom bar from total resizeval
     let l:winheight = self.winheight
@@ -308,8 +298,6 @@ fun! s:Bar.resizeWidgets()
             \ " diff left " . l:diff)
       let l:resizeval = l:diff
     endif
-
-    call win_execute(bufwinid(l:bufnr),'resize ' . l:resizeval)
     
     call ide#debug(4, "Bar.resizeWidgets",
           \ "widget " . l:widget.id .
@@ -322,6 +310,7 @@ fun! s:Bar.resizeWidgets()
           \ " diff left " . l:diff)
     
     let l:bufwinid = bufwinid(l:bufnr)
+    call win_execute(bufwinid(l:bufnr),'resize ' . l:resizeval)
     call ide#debug(4, "Bar.resizeWidgets",
           \ "win_execute(" . l:bufwinid .
           \ ", resize " . l:resizeval . ")")
@@ -340,6 +329,7 @@ fun! s:Bar.closeWidgets()
   for instance in g:IdeBars.getWidgetInstances(self)
     call ide#debug(4, "Bar.closeWidgets",
           \ "Closing widget " . instance.widgetid)
+    
     call instance.widget.run_event("close",
           \ #{ barid: self.id})
   endfor

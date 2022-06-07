@@ -1,38 +1,27 @@
 let s:widgetid = "disasm_shared"
 let s:widget = g:IdeWidget.new(s:widgetid)
 
-let s:buf_prefix = 'ide_widget_disasm_'
+let s:bufname = "ide_widget_disasm"
 
 fun! s:widget.constructor(widget, payload)
-  call ide#debug(3, "widget.constructor",
-        \ "Constructor called for " . s:widgetid)
-
-  let l:layout    = g:Ide.getLayout(a:widget.layoutid)
-  let l:bar       = l:layout.getBar(a:widget.barid)
-  let l:bufname   = s:buf_prefix . 'shared'
-  let l:bufnr     = bufnr(l:bufname)
-
+  let l:bufnr = bufnr(s:bufname)
   if l:bufnr == -1
     execute 'silent! new'
     let l:bufnr = bufnr('$')
     call setbufvar(l:bufnr, "&buflisted", 0)
     call setbufvar(l:bufnr, '&number', 0)
     call setbufvar(l:bufnr, '&list', 0)
-    execute 'silent! file ' . l:bufname
+    execute 'silent! file ' . s:bufname
 
     call win_execute(bufwinid(l:bufnr), 'close!')
   endif
 
-  call self.setvar('minheightpct', 0.5)
+  call g:IdeWidgets.setvar(self, 'minheightpct', 0.5)
 endfun
 
 fun! s:widget.open(widget, payload)
-  call ide#debug(3, "widget.open",
-        \ "Open called for " . a:widget.id)
-  
-  let l:layout  = g:Ide.getLayout(a:widget.layoutid)
-  let l:bar     = l:layout.getBar(a:widget.barid)
-  let l:bufnr   = bufnr(s:buf_prefix . "shared")
+  let l:bufnr = bufnr(s:bufname)
+  let l:bar   = g:IdeWidgets.getWidgetBar(a:widget)
  
   " Switch bar's window to widget's buffer
   call win_execute(l:bar.getWinid(), "sb " . l:bufnr)
@@ -40,7 +29,8 @@ fun! s:widget.open(widget, payload)
   " Draw winbar
   call win_execute(bufwinid(l:bufnr),
         \ "nnoremenu 1.10 WinBar.Disasm :NONE<CR>")
-  call self.setvar('bufnr', l:bufnr)
+  
+  call g:IdeWidgets.setvar(self, "bufnr", l:bufnr)
 endfun
 
 fun! s:widget.opened()
@@ -51,23 +41,21 @@ endfun
 " multiple bars. Closing a widget in one bar will likely
 " close all the widgets sharing the same buffer
 fun! s:widget.close(widget, payload)
-  call ide#debug(3, "widget.close",
-        \ "Close called for " . a:widget.id)
-  let l:bufnr   = bufnr(s:buf_prefix . "shared")
+  let l:bufnr   = bufnr(s:bufname)
   call win_execute(bufwinid(l:bufnr), 'close!')
 endfun
 
 fun! s:widget.update(widget, payload)
-  let l:bufnr = bufnr(s:buf_prefix . "shared")
+  let l:bufnr = bufnr(s:bufname)
   call win_execute(bufwinid(l:bufnr),'normal! ggdG')
   call appendbufline(l:bufnr, '$', split(a:payload.buf, "\n")) 
   call s:gotoline()
 endfun
 
 fun!s:widget.gotoline(widget, payload)
-  let l:bufnr = bufnr(s:buf_prefix . "shared")
+  let l:bufnr = bufnr(s:bufname)
   if l:bufnr == -1
-    echoerr "widget has an invalid buffer"
+    echoerr "Widget has an invalid buffer"
     return
   endif
   let l:str = "g/" . expand('%:t') . ":" . line('.') . "$/"
@@ -78,7 +66,7 @@ fun!s:widget.gotoline(widget, payload)
 endfun
 
 call g:IdeWidgets.register(s:widget)
-call ide#debug(4, "Widget", "Loaded " . s:widgetid)
+
 augroup ide_widget_disasm
   autocmd!
   autocmd User IdeWidgetOpen  call s:trydisasm()
@@ -104,18 +92,14 @@ endfun
 
 fun! s:disasm_(filename)
   call ide#debug(3, "widget.disasm",
-        \ "Disasm called with " . a:filename)
+        \ "Disassembling file " . shellescape(a:filename))
 
-  let l:makefile  = g:IdeC.makefile_vars['makefile']
-  let l:vars      = #{FILENAME:a:filename}
-  let l:buf       = makefile#runcmd(l:makefile,
-        \ 'objdump-dwarf_', l:vars)
+  let l:buf = g:IdeC.disassemble(a:filename) 
   let l:payload   = #{
-        \filename: a:filename,
-        \winid: win_getid(),
-        \makefile: l:makefile,
-        \buf: l:buf
-        \}
+        \ filename: a:filename,
+        \ winid: win_getid(),
+        \ buf: l:buf
+        \ }
 
   call g:IdeWidgets.runEvent(s:widgetid, "update", l:payload)
 endfun

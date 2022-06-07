@@ -53,8 +53,22 @@ fun! s:Layout.init_(layoutid)
   " When a widget instance has layout set to -1
   " it means that it will be available on all layouts
   for instance in self.getWidgetInstances()
+    call ide#debug(4, "Layout.init_",
+          \ "Init instance " . instance.widgetid .
+          \ " layoutid " . instance.layoutid .
+          \ " barid " . instance.barid)
+
+    " Widgets having layoutid equal to -1 are instantianted
+    " on the fly to support virtually any layouts
+    "if instance.widgetid == -1
+      " Check if widget for current layout already exists
+      " If it does exist, we move to the next
+      
+    "endif
+
     " Skip deepcopy if instance has already been copied
     if !empty(instance.widget)
+      echoerr "Instance already processed. Oops"
       continue
     endif
 
@@ -67,33 +81,53 @@ fun! s:Layout.init_(layoutid)
       return -1
     endif
 
+    if instance.layoutid == -1
+      call ide#debug(4, "Layout.init_",
+            \ "Creating widget instance for virtual layout " .
+            \ self.id . 
+            \ " widgetid " . instance.widgetid)
+      " Create a copy of the current instance
+      " with the current layoutid and the same barid
+      let l:instance_copy = copy(l:instance)
+      let l:instance_copy.layoutid = self.id
+
+      " Deepcopy the widget using instance copy metadata
+      let l:widget_copy           = deepcopy(l:widget)
+      let l:widget_copy.layoutid  = instance_copy.layoutid
+      let l:widget_copy.barid     = instance_copy.barid
+      
+      let l:instance_copy.widget = l:widget_copy
+     
+      " Add instance to list of instances
+      " Layout -1 will be filtered out when querying data
+      call g:IdeWidgets.addInstance_(l:instance_copy)
+      continue
+    endif
     " All instances are lazy loaded when a layout
     " is created
     call ide#debug(3, "Layout.init_",
-          \ "Deepcopying instance for " . instance.widgetid)
-
+          \ "Creating instance for " . instance.widgetid)
     " Deepcopy the widget using instance metadata
     let l:widget_copy           = deepcopy(l:widget)
     let l:widget_copy.layoutid  = instance.layoutid
     let l:widget_copy.barid     = instance.barid
-     
+    
     " Assign unique widget to current instance
     let instance.widget = l:widget_copy
   endfor
-
 endfun
 
 " Draw is called whenever a bar is toggled
 " Idx is the actual barid or bad index
 " Val is the status, 0 when closing and 1 when opening
 fun! s:Layout.draw(idx, val)
-  call ide#debug(4, "Layout.draw",
+  call ide#debug(5, "Layout.draw",
         \ "Draw idx " . a:idx .
         \ " val " . a:val)
 
   " Close all opened bars and widgets
   for i in range(0, 3)
-    call ide#debug(4, "Layout.draw",
+    call ide#debug(5, "Layout.draw",
           \ " bar " . i . " state " . self.bars[i].state_)
     " state_ is an internal flag used to
     " determine whether a bar is visible or not
@@ -204,30 +238,6 @@ fun! s:Layout.alignBars()
   endfor
 endfun
 
-fun! s:Layout.resizeBars()
-  for idx in range(0, 3)
-    call self.bars[idx].resize()
-  endfor
-endfun
-
-fun! s:Layout.openWidgets()
-  for idx in range(0, 3)
-    call self.bars[idx].openWidgets()
-  endfor
-endfun
-
-fun! s:Layout.closeWidgets()
-  for idx in range(0, 3)
-    call self.bars[idx].closeWidgets()
-  endfor
-endfun
-
-fun! s:Layout.resizeWidgets()
-  for idx in range(0, 3)
-    call self.bars[idx].resizeWidgets()
-  endfor
-endfun
-
 fun! s:Layout.getBarId(pos)
   return get(self.map, a:pos).idx
 endfun
@@ -235,26 +245,6 @@ endfun
 fun! s:Layout.getBars()
   return self.bars
 endfun
-
-"fun! s:Layout.addWidget_(widgetid, pos)
-"  let l:barid = self.getBarId(a:pos)
-"  let l:widget = g:IdeWidget.get(a:widgetid)
-"  if empty(l:widget)
-"    echoerr "Widget not registered with id: " . a:widgetid 
-"    return -1
-"  endif
-"
-"  let l:widget_copy = deepcopy(l:widget)
-"  let l:widget_copy.layoutid = self.id
-"  let l:widget_copy.barid = l:barid
-"  call self.bars[l:barid].addWidget(l:widget_copy)
-"endfun
-
-"fun! s:Layout.getWidgets(pos)
-"  let l:item = get(self.map, a:pos)
-"  let l:idx = l:item.idx
-"  return self.bars[l:idx].getWidgets()
-"endfun
 
 fun! s:Layout.setvar(key, val)
   let self.vars_[a:key] = a:val

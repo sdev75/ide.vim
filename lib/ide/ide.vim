@@ -22,11 +22,14 @@ fun! s:Ide.initLayout_(layoutid)
 endfun
 
 fun! s:Ide.getLayout(...)
-  if !len(a:000)
+  if !len(a:000) || a:1 == -1
     let l:layoutid = tabpagenr()
   else
     let l:layoutid = a:1
   endif
+  call ide#debug(5, "Ide.getLayout",
+        \ "getLayout() called. Layoutid " . l:layoutid)
+
   if !has_key(self.layouts, l:layoutid)
     return self.initLayout_(l:layoutid)
   endif
@@ -34,11 +37,7 @@ fun! s:Ide.getLayout(...)
 endfun
 
 fun! s:Ide.toggleBar(pos)
-  " save current winid
   let l:layout = self.getLayout()
-  " save current winid and bufnr
-  "let l:layout.mainWinid = win_getid()
-  "let l:layout.mainBufnr = bufnr('')
   call l:layout['toggleBar'](a:pos)
   " return to previous winid
   call win_gotoid(l:layout.getvar('originWinid', -1))
@@ -59,31 +58,6 @@ fun! s:Ide.openTerminalAndFocus()
   call win_gotoid(l:bar.getWinid())
 endfun
 
-"fun! s:Ide.addWidget(layoutid, position, widgetid)
-"  let l:widget = g:IdeWidget.get(a:widgetid)
-"  if empty(l:widget)
-"    echoerr "Widget was not registered: " . a:widgetid
-"    return
-"  endif
-"  let l:payload = {}
-"  let l:payload.layoutid = a:layoutid
-"  let l:payload.position = a:position
-"  let l:payload.widgetid = l:widget.id
-"  if !has_key(self.widgets, l:widget.id)
-"    let self.widgets[l:widget.id] = []
-"  endif
-"  call add(self.widgets[l:widget.id], payload)
-"  "let self.widgets[l:widget.id] = l:payload
-"endfun
-"
-"fun! s:Ide.getWidgets()
-"  return self.widgets
-"endfun
-"
-"fun! s:Ide.getWidget(widgetid)
-"  return get(self.widgets, a:widgetid, -1)
-"endfun
-"
 fun! s:Ide.init_()
   call self.getLayout()
 endfun
@@ -92,29 +66,9 @@ fun! s:Ide.shutdown_()
   call self.shutdownWidgets_()
 endfun
 
+" TODO
 fun! s:Ide.shutdownWidgets_()
   return
-  " iterate through every existing layout
-  for layoutid in keys(self.layouts)
-    call ide#debugmsg("ide.shutdown_", "cleaning up layoutid " . layoutid)
-    
-    " iterate through every layout's bar
-    for bar in self.layouts[layoutid].getBars()
-      call ide#debugmsg("ide.shutdown_", "cleaning up all widgets for bar " . bar.id)
-    
-      " iterate through every bar's widget
-      let widgets = bar.getWidgets()
-      for widgetid in keys(widgets)
-        let l:widget = widgets[widgetid]
-        
-        if empty(widget) | continue | endif
-        call ide#debugmsg("ide.shutdown_", "destructing widget " . widget.id)
-        call widget.run_event_('destructor', {})
-      endfor
-    endfor
-  endfor
-
-  "let x = inputlist([])
 endfun
 
 augroup IdeLib

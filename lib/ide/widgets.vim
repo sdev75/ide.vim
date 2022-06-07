@@ -10,6 +10,7 @@ let s:widgets = {}
 let s:instances = []
 
 fun! s:Widgets.register(widget)
+  call ide#debug(4, "Widgets", "Registering " . a:widget.id)
   let s:widgets[a:widget.id] = a:widget
 endfun
 
@@ -36,14 +37,20 @@ fun! s:Widgets.getInstancesByLayout(instances, layoutid)
         \ "v:val.layoutid == " a:layoutid) 
 endfun
 
-fun! s:Widgets.getInstancesByBar(instances, barid)
+fun! s:Widgets.getInstancesByBarId(instances, barid)
+  " Widgets having layoutid -1 must be filtered out
+  " They are placeholders used to instantiate objects
   return filter(copy(a:instances),
-        \ "v:val.barid == " a:barid)
+        \ "v:val.layoutid != -1" .
+        \ "&& v:val.barid == '" . a:barid . "'")
 endfun
 
 fun! s:Widgets.getInstancesById(instances, widgetid)
+  " Widgets having layoutid -1 must be filtered out
+  " They are placeholders used to instantiate objects
   return filter(copy(a:instances),
-        \ "v:val.widgetid ==# '" . a:widgetid . "'")
+        \ "v:val.layoutid != -1" .
+        \ "&& v:val.widgetid ==# '" . a:widgetid . "'")
 endfun
 
 " TODO might need some refactoring
@@ -54,7 +61,7 @@ fun! s:Widgets.runEvent(widgetid, event_name, payload)
 
   let l:instances = self.getInstancesById(
         \ self.getInstances(), a:widgetid)
-  for instance in l:instances 
+  for instance in l:instances
     call ide#debug(4, "Widgets.runEvent",
           \ "Calling run_event on widget instance" .
           \ " layoutid " . instance.layoutid .
@@ -79,11 +86,14 @@ fun! s:Widgets.addInstance(layoutid, barid, widgetid)
   " Store instance to our list
   " Each instance can be filtered out using filter()
   " This allows sort filter by layoutid, barid and so on.
-  call add(s:instances, l:payload)
-  
-  call ide#debug(2, "widgets.addInstance",
-        \ "Instance added for " . a:widgetid)
-endfu
+  call self.addInstance_(l:payload)
+endfun
+
+fun! s:Widgets.addInstance_(instance)
+  call ide#debug(5, "Widgets.addInstance_",
+        \ "Adding instance for widgetid " . a:instance.widgetid)
+  call add(s:instances, a:instance)
+endfun
 
 fun! s:Widgets.printInstances()
   echom "There are " . len(self.getInstances()) . " widgets"
@@ -97,4 +107,35 @@ fun! s:Widgets.printInstances()
           \ g:IdeLayout.getBarPosition(widget.barid),
           \ widget.widgetid)
   endfor 
+endfun
+
+fun! s:Widgets.setvar(widget, key, val)
+  let a:widget.vars[a:key] = a:val
+endfun
+
+fun! s:Widgets.getvar(widget, key, default)
+  return get(a:widget.vars, a:key, a:default)
+endfun
+
+fun! s:Widgets.resizeWidget(winid, pct)
+  call win_execute(a:winid,
+        \ 'resize ' . float2nr(a:pct * &lines))
+endfun
+
+fun! s:Widgets.newBlankBuffer(bufname)
+  execute 'silent! new'
+  let l:bufnr = bufnr('$')
+  call setbufvar(l:bufnr, "&buflisted", 0)
+  call setbufvar(l:bufnr, '&number', 0)
+  call setbufvar(l:bufnr, '&list', 0)
+  execute 'silent! file ' . a:bufname
+
+  call win_execute(bufwinid(l:bufnr), 'close!')
+  return l:bufnr
+endfun
+
+fun! s:Widgets.getWidgetBar(widget)
+  let l:layout  = g:Ide.getLayout(a:widget.layoutid)
+  let l:bar     = l:layout.getBar(a:widget.barid)
+  return l:bar
 endfun

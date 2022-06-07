@@ -104,8 +104,40 @@ fun! s:C.getMakefileVars()
   return self.makefile_vars
 endfun
 
+fun! s:C.getMakefileVar(name, default)
+  return get(self.makefile_vars, a:name, a:default)
+endfun
+
+fun! s:C.runMakefile(target, vars)
+  let l:makefile = self.getMakefileVar('makefile', -1)
+  if l:makefile == -1
+    echoerr "Makefile variable is NOT set"
+    return -1
+  endif
+
+  return makefile#runcmd(l:makefile, a:target, a:vars)
+endfun
+
+fun! s:C.disassemble(filename)
+  call ide#debug(3, "ide.c",
+        \ "Calling disassemble()_ with " 
+        \. shellescape(a:filename))
+
+  let l:makefile = self.getMakefileVar('makefile', -1)
+  let l:vars = #{
+        \ FILENAME: a:filename
+        \ }
+
+  let l:buf = self.runMakefile("objdump-dwarf_", l:vars)
+  return l:buf
+endfun
+
+fun! s:C.initWidgets()
+endfun
+
 augroup IdeLibC
   autocmd!
+  autocmd BufEnter *.c,*.cpp,*.h call IdeC.initWidgets()
   autocmd BufRead,BufEnter,BufWritePost *.c,*.cpp,*.h call IdeC.init()
   autocmd BufEnter *.c
         \ nnoremap <buffer><leader>s :call IdeC.switchToHeader()<cr>

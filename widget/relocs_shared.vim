@@ -1,38 +1,26 @@
 let s:widgetid = 'relocs_shared'
-let s:buf_prefix = 'ide_widget_relocs_'
 let s:widget = g:IdeWidget.new(s:widgetid)
 
+let s:bufname = "ide_widget_relocs"
+
 fun! s:widget.constructor(widget, payload)
-  let l:layoutid = a:widget.layoutid
-  let l:bar = g:Ide.getLayout(l:layoutid).getBar(a:widget.barid)
-  
-  let l:bufname = s:buf_prefix . 'shared'
-  let l:bufnr = bufnr(l:bufname)
+  let l:bufnr = bufnr(s:bufname)
   if l:bufnr == -1
-    call ide#newBlankBuffer(l:bufname)
+    call g:IdeWidgets.newBlankBuffer(s:bufname)
   endif
 
-  call self.setvar('minheightpct', 0.25)
+  call g:IdeWidgets.setvar(self, 'minheightpct', 0.25)
 endfun
 
 fun! s:widget.open(widget, payload)
-  let l:layoutid = a:widget.layoutid
-  let l:bufname = s:buf_prefix . 'shared'
-  let l:bufnr = bufnr(l:bufname)
-  let l:barid = a:widget.barid
-  let l:bar = g:Ide.getLayout(l:layoutid).getBar(l:barid)
-
-  call ide#debugmsg("relocs.open",
-        \ " bufnr " . l:bufnr
-        \ . " bufname " . l:bufname
-        \ . " layoutid " . l:layoutid
-        \ . " winid " . bufwinid(l:bufnr)
-        \ . " bar.winid " . l:bar.getWinid())
+  let l:bufnr = bufnr(s:bufname)
+  let l:bar   = g:IdeWidgets.getWidgetBar(a:widget)
   
   call win_execute(l:bar.getWinid(), 'sb ' . l:bufnr)
-  let l:winbar = "nnoremenu 1.10 WinBar.Relocations :NONE<CR>"
-  call win_execute(bufwinid(l:bufnr), l:winbar)
-  call self.setvar('bufnr', l:bufnr)
+  call win_execute(bufwinid(l:bufnr),
+        \ "nnoremenu 1.10 WinBar.Relocations :NONE<CR>")
+
+  call g:IdeWidgets.setvar(a:widget, "bufnr", l:bufnr)
 endfun
 
 fun! s:widget.opened()
@@ -40,45 +28,29 @@ fun! s:widget.opened()
 endfun
 
 fun! s:widget.close(widget, payload)
-  let l:layoutid = a:widget.layoutid
-  let l:bufname = s:buf_prefix . 'shared'
-  let l:bufnr = bufnr(l:bufname)
+  let l:bufnr = bufnr(s:bufname)
   let l:winid = bufwinid(l:bufnr)
-  call ide#debugmsg("relocs.close",
-        \ " layoutid " . l:layoutid
-        \ . " bufname " . l:bufname
-        \ . " bufnr " . l:bufnr
-        \ . " winid " . l:winid)
   call win_execute(l:winid, 'close!')
 endfun
 
-fun! s:widget.getbufnr()
-  return s:buf_prefix . 'shared'
-endfun
-
 fun! s:widget.update(widget, payload)
-  let l:bufname = s:buf_prefix . 'shared'
-  let l:bufnr = bufnr(l:bufname)
-
+  let l:bufnr = bufnr(s:bufname)
   call win_execute(bufwinid(l:bufnr),'normal! ggdG')
   call appendbufline(l:bufnr, '$', split(a:payload.buf, "\n")) 
 endfun
 
 call g:IdeWidgets.register(s:widget)
-call ide#debug(4, "Widget", "Loaded " . s:widgetid)
 
-finish
-if !empty(g:IdeWidget.get(s:widgetid))
 augroup ide_widget_relocs
   autocmd!
-  "autocmd User IdeWidgetOpen call s:try()
-  autocmd User IdeCInit call s:do()
-  autocmd BufWritePost *.c  call s:do()
+  autocmd User IdeWidgetOpen  call s:try()
+  autocmd User IdeCInit       call s:do()
+  autocmd BufWritePost *.c    call s:do()
 augroup END
 
 fun! s:try()
+  call ide#debug(4, "widget.relocs", "try() invoked")
   let l:bufnr = g:Ide.getLayout().getvar('originBufnr', -1)
-  echom bufname(l:bufnr)
   let l:ext = fnamemodify(bufname(l:bufnr),':e')
   if l:ext != 'c' | return | endif
   let l:filename = fnamemodify(bufname(l:bufnr), ':p')
@@ -91,21 +63,20 @@ fun! s:do()
 endfun
 
 fun! s:do_(filename)
-  let l:widgets = g:Ide.getWidgets()
-  let l:widget = l:widgets[s:widgetid][0]
- 
-  let l:barid = g:Ide.getLayout().getBarId(l:widget.position)
-  let l:widget = g:Ide.getLayout()
-        \.getBar(l:barid).getWidget(s:widgetid)
-  let l:makefile = g:IdeC.makefile_vars['makefile']
-  let l:vars = #{FILENAME:a:filename}
-  let l:buf = makefile#runcmd(l:makefile, 'readelf-relocs_', l:vars)
+  call ide#debug(4, "widget.relocs",
+        \ "do_() invoked with " . a:filename)
+  
+  let l:makefile  = g:IdeC.makefile_vars['makefile']
+  let l:vars      = #{FILENAME:a:filename}
+  let l:buf       = makefile#runcmd(l:makefile,
+        \ 'readelf-relocs_', l:vars)
+
   let l:payload = #{
-        \filename: a:filename,
-        \winid: win_getid(),
-        \makefile: l:makefile,
-        \buf: l:buf
-        \}
-  call l:widget.run_event('update', l:payload)
+        \ filename: a:filename,
+        \ winid: win_getid(),
+        \ makefile: l:makefile,
+        \ buf: l:buf
+        \ }
+  
+  call g:IdeWidgets.runEvent(s:widgetid, "update", l:payload)
 endfun
-endif
