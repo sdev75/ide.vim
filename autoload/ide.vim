@@ -47,6 +47,9 @@ fun! ide#debug(level, prefix, msg)
   endif
   let l:msg = "[DEBUG:" . a:level . "][" . a:prefix 
         \ . "] " .  a:msg
+  if mode() == "V"
+    return
+  endif
   execute "normal! :echom \"" . l:msg . "\"\<CR><CR>"
 endfun
 

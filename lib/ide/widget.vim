@@ -40,8 +40,8 @@ fun! s:Widget.run_event_(event_name, payload)
   if has_key(self, l:funcname)
     call ide#debug(5, "Widget.run_event_",
           \ "Executing parent callback for " . l:funcname)
-    " execute parent callback
-    let l:res = self[a:event_name.'_'](a:payload)
+    " execute parent callback (ending in underscore)
+    let l:res = self[l:funcname](a:payload)
     if l:res == -1
       " stop propagation if return value is -1
       call ide#debug(5, "Widget.run_event_",

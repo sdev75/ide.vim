@@ -58,7 +58,6 @@ fun! s:Widgets.runEvent(widgetid, event_name, payload)
   call ide#debug(3, "Widgets.runEvent",
         \ "widgetid " . a:widgetid .
         \ " event_name " . a:event_name)
-
   let l:instances = self.getInstancesById(
         \ self.getInstances(), a:widgetid)
   for instance in l:instances

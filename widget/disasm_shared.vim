@@ -54,15 +54,15 @@ endfun
 
 fun!s:widget.gotoline(widget, payload)
   let l:bufnr = bufnr(s:bufname)
-  if l:bufnr == -1
-    echoerr "Widget has an invalid buffer"
+  let l:winid = bufwinid(l:bufnr)
+  if l:winid == -1
     return
   endif
   let l:str = "g/" . expand('%:t') . ":" . line('.') . "$/"
-  call win_execute(bufwinid(l:bufnr), 'set hlsearch')
-  call win_execute(bufwinid(l:bufnr), l:str)
-  call win_execute(bufwinid(l:bufnr), 'setlocal scrolloff=20')
-  call win_execute(bufwinid(l:bufnr), 'redraw')
+  call win_execute(l:winid, 'set hlsearch')
+  call win_execute(l:winid, l:str)
+  call win_execute(l:winid, 'setlocal scrolloff=20')
+  call win_execute(l:winid, 'redraw')
 endfun
 
 call g:IdeWidgets.register(s:widget)
