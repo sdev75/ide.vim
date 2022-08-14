@@ -268,6 +268,7 @@ fun! s:Bar.resizeWidgets()
       echoerr "Widget bufnr is invalid"
       return -1
     endif
+    
     let l:heightpct = g:IdeWidgets.getvar(l:widget,
           \ 'minheightpct', 1)
     
@@ -285,7 +286,7 @@ fun! s:Bar.resizeWidgets()
     endif
     
     let l:resizeval = float2nr(l:heightpct * l:winheight) - 2
-
+    
     let l:diff = l:winheight - l:sum
     let l:sum = l:sum + l:resizeval
     
@@ -304,13 +305,14 @@ fun! s:Bar.resizeWidgets()
           \ " minheightpct " . l:heightpct .
           \ " bar winheight " . self.winheight .
           \ " bar local winheight " . l:winheight .
-          \ " resizeval " . l:resizeval .
+          \ " resizeval " . string(l:resizeval) .
           \ " bufnr " . l:bufnr .
-          \ " sum " . l:sum .
-          \ " diff left " . l:diff)
+          \ " sum " . string(l:sum) .
+          \ " diff left " . string(l:diff))
     
     let l:bufwinid = bufwinid(l:bufnr)
     call win_execute(bufwinid(l:bufnr),'resize ' . l:resizeval)
+    
     call ide#debug(4, "Bar.resizeWidgets",
           \ "win_execute(" . l:bufwinid .
           \ ", resize " . l:resizeval . ")")

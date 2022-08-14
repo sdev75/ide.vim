@@ -3,8 +3,6 @@ let g:Ide = s:Ide
 
 let s:Ide.pluginpath = expand('<sfile>:p:h:h:h')
 let s:Ide.layouts = {}
-"let s:Ide.widgets = {}
-"let s:Ide.widgets_ = {}
 
 function! s:Ide.getRootpath()
   return self.rootpath_
@@ -27,6 +25,7 @@ fun! s:Ide.getLayout(...)
   else
     let l:layoutid = a:1
   endif
+ 
   call ide#debug(5, "Ide.getLayout",
         \ "getLayout() called. Layoutid " . l:layoutid)
 
@@ -63,12 +62,6 @@ fun! s:Ide.init_()
 endfun
 
 fun! s:Ide.shutdown_()
-  call self.shutdownWidgets_()
-endfun
-
-" TODO
-fun! s:Ide.shutdownWidgets_()
-  return
 endfun
 
 augroup IdeLib

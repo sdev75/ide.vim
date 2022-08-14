@@ -18,6 +18,7 @@ endfun
 
 fun! s:Layout.new(layoutid)
   let l:obj = deepcopy(self)
+  echom l:obj
   let l:obj.id = a:layoutid
   call l:obj['init_'](a:layoutid)
   return l:obj
@@ -57,14 +58,6 @@ fun! s:Layout.init_(layoutid)
           \ "Init instance " . instance.widgetid .
           \ " layoutid " . instance.layoutid .
           \ " barid " . instance.barid)
-
-    " Widgets having layoutid equal to -1 are instantianted
-    " on the fly to support virtually any layouts
-    "if instance.widgetid == -1
-      " Check if widget for current layout already exists
-      " If it does exist, we move to the next
-      
-    "endif
 
     " Skip deepcopy if instance has already been copied
     if !empty(instance.widget)
@@ -138,7 +131,7 @@ fun! s:Layout.draw(idx, val)
     call self.bars[i].closeWidgets()
     call self.bars[i].close()
   endfor
-
+  
   " Set the state of the current bar
   " When Opening the state will be flagged as OPEN
   let self.bars[a:idx].state_= a:val
@@ -151,7 +144,7 @@ fun! s:Layout.draw(idx, val)
     endif
     call self.bars[i].open()
   endfor
-
+  
   " Align all bars
   call self.alignBars()
 
@@ -162,7 +155,7 @@ fun! s:Layout.draw(idx, val)
   for i in range(0, 3)
     call self.bars[i].calcHeight()
   endfor
-
+  
   " Construct and open all widgets
   " No resizing takes place at this point
   for i in range(0, 3)
@@ -171,7 +164,6 @@ fun! s:Layout.draw(idx, val)
     endif
     call self.bars[i].openWidgets()
   endfor
-
   " Resize all widgets from BOTTOM to TOP
   " Why? When a buffer is resized the other buffers
   " below it will be affected and resize as well

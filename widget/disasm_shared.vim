@@ -70,7 +70,7 @@ call g:IdeWidgets.register(s:widget)
 augroup ide_widget_disasm
   autocmd!
   autocmd User IdeWidgetOpen  call s:trydisasm()
-  autocmd User IdeCInit       call s:disasm()
+  "autocmd User IdeCInit       call s:disasm()
   autocmd BufWritePost *.c    call s:disasm()
   autocmd CursorMoved *.c     call s:gotoline()
 augroup END
