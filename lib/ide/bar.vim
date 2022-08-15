@@ -289,20 +289,21 @@ fun! s:Bar.resizeWidgets()
     
     let l:diff = l:winheight - l:sum
     let l:sum = l:sum + l:resizeval
+
     
     if l:resizeval > l:diff
       call ide#debug(4, "Bar.resizeWidgets",
             \ "Widget height is overflowing." . 
-            \ " sum " . l:sum .
+            \ " sum " . string(l:sum) .
             \ " actual winheight " . self.winheight .
             \ " local winheight " . l:winheight .
-            \ " diff left " . l:diff)
+            \ " diff left " . string(l:diff))
       let l:resizeval = l:diff
     endif
-    
+   
     call ide#debug(4, "Bar.resizeWidgets",
           \ "widget " . l:widget.id .
-          \ " minheightpct " . l:heightpct .
+          \ " minheightpct " . string(l:heightpct) .
           \ " bar winheight " . self.winheight .
           \ " bar local winheight " . l:winheight .
           \ " resizeval " . string(l:resizeval) .
@@ -315,7 +316,7 @@ fun! s:Bar.resizeWidgets()
     
     call ide#debug(4, "Bar.resizeWidgets",
           \ "win_execute(" . l:bufwinid .
-          \ ", resize " . l:resizeval . ")")
+          \ ", resize " . string(l:resizeval) . ")")
 
     if has_key(widget, 'opened')
       call widget.opened()
