@@ -91,15 +91,6 @@ fun! makefile#buildcmd(target, vars, flags)
   return l:cmd
 endfun
 
-"fun! makefile#preprocess(makefile, filename)
-"  let l:awkfile = g:Ide.pluginpath . '/script/makefile_pp.awk'
-"  let l:cmd= makefile#buildcmd(a:makefile,'preprocess_')
-"  let l:cmd.=' AWKFILE=' . shellescape(l:awkfile)
-"  let l:cmd.=' FILENAME=' . shellescape(a:filename)
-"  execute 'silent read !' . l:cmd
-"  "return system(l:cmd)
-"endfun
-
 fun! makefile#runcmd_(cmd)
   "call ide#debugmsg('runcmd', a:cmd)
   let l:res = system(a:cmd)
