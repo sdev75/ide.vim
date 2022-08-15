@@ -10,6 +10,13 @@ FILENAME_BASE := $(subst $(CURDIR),,$(FILENAME))
 FILENAME_OBJ := $(basename $(FILENAME_BASE)).o
 FILENAME_OUT := $(addprefix $(OBJDIR), $(FILENAME_OBJ))
 OUTPUT_DIR := $(OBJDIR)$(dir $(FILENAME_BASE))
+ARCH := $(shell uname -m)
+
+ifeq ($(ARCH),aarch64)
+	DISASM_SYNTAX_FLAG := 
+else
+	DISASM_SYNTAX_FLAG := -M intel	
+endif
 
 printvar_%:
 	@printf "%b" "$($*)"
@@ -33,7 +40,7 @@ $(OUTPUT_DIR):
 #	echo objdump -D $(basename $(FILENAME)).o -M intel -j .text -l
 #
 objdump-dwarf_: $(FILENAME_OUT)
-	objdump --disassemble --reloc -j .text -M intel $< -l
+	objdump --disassemble --reloc -j .text $(DISASM_SYNTAX_FLAG) $< -l
 #
 #objdump_symtable_: $(basename $(FILENAME)).o
 #	echo objdump -t $<
