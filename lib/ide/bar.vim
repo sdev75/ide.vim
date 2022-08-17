@@ -241,10 +241,12 @@ fun! s:Bar.resizeWidgets()
  
   " Start to resize from BOTTOM to TOP
   "let l:widgets = reverse(copy(l:widgets))
-  
+ 
   " if there is only one widget
   " it's wise not to resize the only space available to 1
   if len(l:widgets) > 1
+    call ide#debug(4, "Bar.resizeWidgets",
+          \ "Resizing multiple widgets...")
     " some widgets take up all the space available
     " such as terminal window, so resizing it to 1
     " will actually resize the whole bar to 1

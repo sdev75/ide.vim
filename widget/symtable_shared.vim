@@ -54,7 +54,7 @@ augroup ide_widget_symtable
 augroup END
 
 fun! s:try()
-  call ide#debug(3, "widget.symtable",
+  call ide#debug(4, "widget.symtable",
         \ "Invoking try()")
   let l:bufnr = g:Ide.getLayout().getvar('originBufnr', -1)
   echom bufname(l:bufnr)

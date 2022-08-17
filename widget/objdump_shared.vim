@@ -29,7 +29,7 @@ fun! s:widget.open(widget, payload)
   let l:barid = a:widget.barid
   let l:bar = g:Ide.getLayout(l:layoutid).getBar(l:barid)
  
-  call ide#debugmsg("objdump.open",
+  call ide#debug(3, "objdump.open",
         \ " bufnr " . l:bufnr
         \ . " bufname " . l:bufname
         \ . " layoutid " . l:layoutid
@@ -51,7 +51,7 @@ fun! s:widget.close(widget, payload)
   let l:bufname = s:buf_prefix . 'shared'
   let l:bufnr = bufnr(l:bufname)
   let l:winid = bufwinid(l:bufnr)
-  call ide#debugmsg("objdump.close",
+  call ide#debug(3, "objdump.close",
         \ " layoutid " . l:layoutid
         \ . " bufname " . l:bufname
         \ . " bufnr " . l:bufnr
@@ -96,7 +96,8 @@ fun! s:trydisasm()
   let l:bufnr = g:Ide.getLayout().getvar('originBufnr', -1)
   let l:ext = fnamemodify(bufname(l:bufnr),':e')
   if l:ext != 'c' | return | endif
-  call ide#debugmsg("trydisasm", "mainbufnr is " . l:bufnr) 
+  call ide#debug(3, "trydisasm", 
+        \ "mainbufnr is " . l:bufnr) 
   let l:filename = fnamemodify(bufname(l:bufnr), ':p')
   call s:disasm_(l:filename)
 endfun

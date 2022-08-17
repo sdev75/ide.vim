@@ -92,7 +92,6 @@ fun! makefile#buildcmd(target, vars, flags)
 endfun
 
 fun! makefile#runcmd_(cmd)
-  "call ide#debugmsg('runcmd', a:cmd)
   let l:res = system(a:cmd)
   if v:shell_error
    " echoerr An error has occurred: ' . v:errmsg
@@ -125,6 +124,5 @@ fun! makefile#readcmd(makefile, cmd, vars)
   endif
 
   let l:cmd .= ' ' . makefile#buildcmd(a:makefile,a:cmd . '_')
-  "call ide#debugmsg('readcmd', l:cmd)
   execute 'silent read !' . l:cmd
 endfun
