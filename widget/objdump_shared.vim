@@ -94,10 +94,10 @@ fun! s:trydisasm()
   "endif
   "let l:bufnr = g:Ide.getLayout().mainBufnr
   let l:bufnr = g:Ide.getLayout().getvar('originBufnr', -1)
-  let l:ext = fnamemodify(bufname(l:bufnr),':e')
-  if l:ext != 'c' | return | endif
   call ide#debug(3, "trydisasm", 
         \ "mainbufnr is " . l:bufnr) 
+  let l:ext = fnamemodify(bufname(l:bufnr),':e')
+  if l:ext != 'c' | return | endif
   let l:filename = fnamemodify(bufname(l:bufnr), ':p')
   call s:disasm_(l:filename)
 endfun

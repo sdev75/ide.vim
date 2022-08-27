@@ -49,7 +49,7 @@ augroup ide_widget_relocs
 augroup END
 
 fun! s:try()
-  call ide#debug(4, "widget.relocs", "try() invoked")
+  call ide#debug(3, "widget.relocs", "try() invoked")
   let l:bufnr = g:Ide.getLayout().getvar('originBufnr', -1)
   let l:ext = fnamemodify(bufname(l:bufnr),':e')
   if l:ext != 'c' | return | endif
@@ -63,7 +63,7 @@ fun! s:do()
 endfun
 
 fun! s:do_(filename)
-  call ide#debug(4, "widget.relocs",
+  call ide#debug(3, "widget.relocs",
         \ "do_() invoked with " . a:filename)
   
   let l:makefile  = g:IdeC.makefile_vars['makefile']

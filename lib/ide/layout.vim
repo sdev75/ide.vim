@@ -18,7 +18,6 @@ endfun
 
 fun! s:Layout.new(layoutid)
   let l:obj = deepcopy(self)
-  echom l:obj
   let l:obj.id = a:layoutid
   call l:obj['init_'](a:layoutid)
   return l:obj
@@ -174,6 +173,63 @@ fun! s:Layout.draw(idx, val)
     call self.bars[i].resizeWidgets()
   endfor
 
+endfun
+
+fun! s:Layout.redraw()
+  call ide#debug(5, "Layout.redraw")
+
+  " Close all opened bars and widgets
+  for i in range(0, 3)
+    call ide#debug(5, "Layout.draw",
+          \ " bar " . i . " state " . self.bars[i].state_)
+    " state_ is an internal flag used to
+    " determine whether a bar is visible or not
+    " state_ == 0 the widget is already closed
+    if self.bars[i].state_ == 0 
+      continue
+    endif
+    call self.bars[i].closeWidgets()
+    call self.bars[i].close()
+  endfor
+  
+  " Open all bars were flagged as OPEN
+  " This will reopen previously flagged bars
+  for i in range(0, 3)
+    if self.bars[i].state_ == 0
+      continue
+    endif
+    call self.bars[i].open()
+  endfor
+  
+  " Align all bars
+  call self.alignBars()
+
+  " Calculate the hight of each bar
+  " without actually resizing 
+  " Actual resizing is done during widget resizing
+  " as each buffer resize will affect each other 
+  for i in range(0, 3)
+    call self.bars[i].calcHeight()
+  endfor
+  
+  " Construct and open all widgets
+  " No resizing takes place at this point
+  for i in range(0, 3)
+    if self.bars[i].state_ == 0
+      continue
+    endif
+    call self.bars[i].openWidgets()
+  endfor
+  " Resize all widgets from BOTTOM to TOP
+  " Why? When a buffer is resized the other buffers
+  " below it will be affected and resize as well
+  for i in [0, 2, 1, 3]
+    if self.bars[i].state_ == 0 
+      continue
+    endif
+    call self.bars[i].resizeWidgets()
+  endfor
+ 
 endfun
 
 fun! s:Layout.openBar(idx)
