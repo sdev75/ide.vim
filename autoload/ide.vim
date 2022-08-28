@@ -23,6 +23,12 @@ fun! ide#loadwidget(path)
   execute 'runtime widget/'. a:path . '.vim'
 endfun
 
+fun! ide#scriptloaded(type, path)
+  let l:scriptnames = split(execute('scriptnames'), "\n")
+  return len(filter(l:scriptnames, 
+        \ 'v:val =~ ' . a:type . '/' . a:path . '.vim'))
+endfun
+
 fun! ide#debugmsg(prefix, msg)
   if !g:IdeDebugVerbosity
     return
