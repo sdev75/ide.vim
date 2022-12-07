@@ -88,6 +88,24 @@ Simple use for a c program with object disassembly + readelf
 
 ![C Ide Example](/screenshot/c.png)
 
+## API
+
+### Makefile functions
+
+The `makefile` class is a collection of function for handling Makefile related operations, which is very useful when working with C and C++ projects. CMake and AutoMake will be supported in the future as well.
+
+```vim
+makefile#lookup(cwd)            " Traverses the parent dirs (up to 3) for a Makefile
+makefile#parse(makefile)        " Parses all the useful info into an object
+makefile#getvar(makefile, name) " Parses a single variable
+makefile#buildcmd(target, vars, flags)
+  " This is useful for generating the actual payload for the Makefile wrapper
+makefile#runcmd(makefile, target, vars)
+  " Runs a specific target within the makefile using the Makefile wrapper
+makefile#readcmd(makefile, target, vars)
+  " Same as above, it reads the output directly inside the buffer instead
+```
+
 ## Disclaimer
 This script is for personal use, and it's still early development phase. I will
 add more information as I continue to make progress.
