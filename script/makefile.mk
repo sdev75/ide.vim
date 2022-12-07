@@ -41,6 +41,11 @@ $(OUTPUT_DIR):
 #
 objdump-dwarf_: $(FILENAME_OUT)
 	objdump --disassemble --reloc -j .text $(DISASM_SYNTAX_FLAG) $< -l
+
+preprocess_: $(FILENAME)
+#$(CC) -E $(CFLAGS) $(CPPFLAGS) $< | cat -s
+	$(CC) -E $(CFLAGS) $(CPPFLAGS) $< | awk -E $(AWKFILE) | cat -s
+
 #
 #objdump_symtable_: $(basename $(FILENAME)).o
 #	echo objdump -t $<
