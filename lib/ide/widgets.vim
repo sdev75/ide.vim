@@ -1,7 +1,7 @@
 let s:Widgets = {}
 let g:IdeWidgets = s:Widgets
 
-" Unique list of widgets and their procedures and metedata
+" Unique list of widgets and their procedures and metadata
 let s:widgets = {}
 
 " List of multiple widgets added
