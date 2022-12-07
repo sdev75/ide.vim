@@ -111,18 +111,22 @@ fun! makefile#runcmd(makefile, target, vars)
   return makefile#runcmd_(l:cmd)
 endfun
 
-fun! makefile#readcmd(makefile, cmd, vars)
-  echoerr "TODO"
-  return
-  let l:awkfile = g:Ide.pluginpath . '/script/makefile_pp.awk'
-  let l:cmd = "" 
-
-  if !empty(a:vars)
-    for key in keys(a:vars)
-      let l:cmd .=' ' . key . '=' .shellescape(a:vars[key])
-    endfor
+fun! makefile#readcmd_(cmd)
+  let l:res = system(a:cmd)
+  if v:shell_error
+   " echoerr An error has occurred: ' . v:errmsg
   endif
+  execute 'silent read !' . l:res
+endfun
 
-  let l:cmd .= ' ' . makefile#buildcmd(a:makefile,a:cmd . '_')
-  execute 'silent read !' . l:cmd
+fun! makefile#readcmd(makefile, target, vars)
+  let l:vars = a:vars
+  let l:flags = {
+        \'--no-print-directory': v:null,
+        \'-f': s:makefile_wrapper,
+        \'-C': fnamemodify(a:makefile,':p:h'),
+        \}
+  let l:target = a:target
+  let l:cmd = makefile#buildcmd(l:target, l:vars, l:flags)
+  return makefile#readcmd_(l:cmd)
 endfun
