@@ -176,7 +176,7 @@ fun! s:Layout.draw(idx, val)
 endfun
 
 fun! s:Layout.redraw()
-  call ide#debug(5, "Layout.redraw")
+  call ide#debug(5, "Layout.redraw", "Redrawing layout")
 
   " Close all opened bars and widgets
   for i in range(0, 3)
