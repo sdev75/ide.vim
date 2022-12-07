@@ -24,6 +24,27 @@ endfun
 fun! s:widget.open(widget, payload)
   let l:bar = g:IdeWidgets.getWidgetBar(a:widget)
   let l:bufnr = bufnr(s:bufname)
+
+  if l:bufnr == -1
+    " A bufnr can become invalid when exiting the terminal by accident or 
+    " by choice. This results in undefined behaviour.
+    call ide#debug(4, "widget.open",
+          \ "Attempting to use an invalid bufnr (-1)")
+    call g:IdeWidgets.setvar(a:widget, "bufnr", -1)
+    
+    " Destructing the widget as it is no longer in a valid state.
+    call self.run_event('destructor', a:payload)
+
+    " Close the bar as it is left opened when exiting the terminal.
+    call l:bar.close()
+
+    " Toggle the terminal window
+    call g:Ide.toggleTerminal()
+
+    " Signal the caller with an error
+    return -1
+  endif
+
   call win_execute(l:bar.getWinid(), 'b ' . l:bufnr)
   call g:IdeWidgets.setvar(a:widget, "bufnr", l:bufnr)
 endfun
@@ -34,4 +55,22 @@ fun! s:widget.close(widget, payload)
   call win_execute(l:winid, 'close!')
 endfun
 
+fun! s:widget.onbufcreate(bufnr)
+  let bufname = bufname(a:bufnr)
+  if bufname ==? s:bufname
+    call ide#debug(4, "widget.onbufunload",
+          \ "Widget Terminal Shared has exited.")
+    
+    " close the window as it has no valid terminal handle any longer
+    let winid = bufwinid(bufnr('%'))
+    let win = getwininfo(winid)
+    call win_execute(winid, 'close!')
+  endif
+endfun
+
 call g:IdeWidgets.register(s:widget)
+
+augroup IdeWidgetTermShared
+  autocmd!
+  autocmd BufCreate * call s:widget.onbufcreate(bufnr())
+augroup END
