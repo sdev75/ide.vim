@@ -302,3 +302,129 @@ fun! s:Layout.getvar(key, default)
   return get(self.vars_, a:key, a:default)
 endfun
 
+fun! s:Layout.getWidth()
+  let l:list = winlayout(self.id)
+  call g:Ide.debug(3, "Layout.getWidth", l:list)
+  
+  let l:width = -1
+  
+  " Only leaf one window
+  " ['leaf', <ID>]
+  if l:list[0] ==? "leaf"  && type(l:list[1]) == v:t_number
+  
+    let l:width = winwidth(l:list[1])
+  
+  " Column with multiple windows
+  elseif l:list[0] ==? "col" && type(l:list[1]) == v:t_list
+   
+    let l:col = l:list[1]
+    " Scenario#1
+    " -------------------------------------------------
+    " [ 'col', [['leaf', <ID>], ['leaf', <ID>]] ] 
+    "   -----   --------------  -------------
+    "
+    "   +-------+--------------+
+    "   | col.0 | leaf.0, <ID> |
+    "   +-------+--------------+
+    "   | col.0 | leaf.1, <ID> |
+    "   +----------------------+
+    " The total width can be calculated from the 1st leaf
+    "
+    "
+   
+    " Scenario#2 
+    " [ col, [ [row, [ [leaf,ID],[leaf,ID] ] ], [leaf,ID] ]]
+    "
+    " +-------+-------------------+
+    " | col.0 |      row.0        |
+    " |       |  leaf0.0, leaf0.1 |
+    " +-------+-------------------+
+    " | col 0 |       leaf.1      |
+    " +-------+-------------------+
+    "
+    " The width can be calculated again using the 1st row or leaf
+    
+    " See scenario#2
+    " Check if the dealing with a row
+    if l:col[0][0] == "row"
+      let l:row = l:col[0][1]
+      " Foreach all the leaves within the row as per Scenario#2
+      for i in range(0, len(l:row) - 1)
+        let l:winid = l:row[i][1]
+        let l:winwidth = winwidth(l:winid)
+        call g:Ide.debug(3, "Layout.getWidth",
+              \ "A. WinId=" .. l:winid .. " WinWidth=" .. l:winwidth)
+        let l:width = l:width + winwidth(l:row[i][1])
+      endfor
+
+    " See scenario#1
+    elseif l:col[0][0] == "leaf"
+        let l:winid = l:col[0][1]
+        let l:winwidth = winwidth(l:winid)
+        call g:Ide.debug(3, "Layout.getWidth",
+              \ "B.WinId=" .. l:winid .. " WinWidth=" .. l:winwidth)
+        let l:width = winwidth(l:col[0][1])
+    endif
+    
+  elseif l:list[0] ==? "row" && type(l:list[1]) == v:t_list
+    
+    " Rows can contain one or more leaves, including other cols
+    " In the event of a col the same logic will be applied as per 
+    " scenario#2 to get the sum of the leaves within the col
+    " The main difference between Rows and Cols is that the former 
+    " must be iterated over all of the leaves and cols in order to 
+    " calculate the total width
+    "
+    " Row layout example
+    " +--------------------------------------+
+    " |        |   col    |    col           |
+    " | [leaf] |          |                  |
+    " |        |          |      [leaf]      |
+    " |        |  [leaf]  |                  |
+    " |        |          +------------------+
+    " |        |          |    row           |
+    " |        |----------|         |        |
+    " |        |          |         |   col  |
+    " |        |          |  [leaf] |        |
+    " |        |  [leaf]  |         | [leaf] |
+    " |        |          |         |--------|
+    " |        |          |         | [leaf] |
+    " |        |          |         |        |
+    " +--------------------------------------+ 
+    
+    " Items may contain either [leaf,ID] or [col, [array]]
+    let l:items = l:list[1]
+
+    " Foreach all items within the list, either LEAF or COL->ARRAY
+    for i in range(0, len(l:items) - 1)
+      let l:item = l:items[i]
+ 
+      if l:item[0] ==? "leaf"
+        let l:winid = l:item[1]
+        let l:winwidth = winwidth(l:winid)
+        call g:Ide.logmsg("Processing LEAF " .. l:winid)
+        call g:Ide.logmsg(l:item)
+        let l:width = l:width + l:winwidth
+        continue
+      endif
+
+      " The first window is enough to perform the calculation
+      if l:item[0] ==? "col"
+        let l:winid = l:item[1][0][1]
+        let l:winwidth = winwidth(l:winid)
+        call g:Ide.logmsg("Processing COL " .. l:winid)
+        call g:Ide.logmsg(l:item)
+        let l:width = l:width + l:winwidth
+        continue
+      endif
+
+    endfor
+
+     
+  endif
+
+
+  call g:Ide.debug(3, "Layout.getWidth", "Calculated width is " .. l:width)
+  "for i in range(0, len(l:list)-1)
+  "endfor
+endfun
