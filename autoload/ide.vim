@@ -5,7 +5,6 @@ endif
 let g:loaded_ide_autoload = 1
 
 fun! ide#init()
-  "runtime lib/ide/buffer.vim
   runtime lib/ide/editor.vim
   runtime lib/ide/editors.vim
   runtime lib/ide/panel.vim
@@ -13,9 +12,9 @@ fun! ide#init()
   runtime lib/ide/bars.vim
   runtime lib/ide/widget.vim
   runtime lib/ide/widgets.vim
+  runtime lib/ide/layout_config.vim
   runtime lib/ide/layouts.vim
   runtime lib/ide/layout.vim
-  "runtime lib/ide/terminal.vim
   runtime lib/ide/ide.vim
 endfun
 

@@ -13,6 +13,8 @@ function! s:Ide.setRootpath(...)
   let self.rootpath_ = l:abspath
 endfunction
 
+" Get instance of a layout
+" When no argument, it is returned the layout by tabpagenr
 fun! s:Ide.getLayout(...)
   if !len(a:000) || a:1 == 1
     let l:layoutid = tabpagenr()
@@ -20,6 +22,11 @@ fun! s:Ide.getLayout(...)
     let l:layoutid = a:1
   endif
   return g:IdeLayouts.get(l:layoutid)
+endfun
+
+" Redraw current layout
+fun! s:Ide.redraw()
+  return self.getLayout().draw()
 endfun
 
 fun! s:Ide.toggleBar(pos)
@@ -45,7 +52,7 @@ fun! s:Ide.openTerminalAndFocus()
 endfun
 
 fun! s:Ide.init_()
-  call self.getLayout()
+  return self.getLayout().draw()
 endfun
 
 fun! s:Ide.log(type, level, prefix, data)

@@ -1,16 +1,6 @@
 let s:Layouts = {}
 let g:IdeLayouts = s:Layouts
 
-let s:MapStickySeq = [
-      \ [3,2,1,0], [2,0,1,3], [0,3,2,1], [2,1,3,0] ]
-let s:MapIndex = ["left","bottom","top","right"]
-let s:Map = #{
-      \ left:    #{ idx: 0, flags: g:IdeBarFlags.LEFT  },
-      \ bottom:  #{ idx: 1, flags: g:IdeBarFlags.BOTTOM },
-      \ top:     #{ idx: 2, flags: g:IdeBarFlags.TOP },
-      \ right:   #{ idx: 3, flags: g:IdeBarFlags.RIGHT }
-      \ }
-
 let s:layouts = {}
 
 fun! s:Layouts.get(layoutid)
@@ -23,8 +13,12 @@ fun! s:Layouts.get(layoutid)
 
   call g:Ide.debug(3, "Layouts.get",
           \ "Creating new instance for layoutid: " .. a:layoutid)
-  let l:layout = g:IdeLayout.new(a:layoutid)
+  " Assign default configuration data
+  " One way to override this is to create the layout manually
+  " The instance will be returned instead of reaching this line
+  let l:layout = g:IdeLayout.new(a:layoutid, g:IdeLayoutConfig.new())
   let s:layouts[a:layoutid] = l:layout
+  
   return l:layout
 endfun
 
@@ -181,14 +175,15 @@ fun! s:Layouts.alignJustify()
   execute("call win_gotoid(win_getid(4)) | set wfh")
 endfun
 
-fun! s:Layouts.draw(layoutid, align)
+" align stands for panel alignment (short for easy typing)
+fun! s:Layouts.draw(align)
   " Get default placeholder for all windows
   let l:bufnr = self.getPlaceholderBufnr()
 
   " Close all except one and assign it the placeholder
   execute("only! | b!" .. l:bufnr)
   
-  " Align accordingly
+  " Perform the alignment of choice
   if a:align ==? "left"
     call self.alignLeft()
   elseif a:align ==? "right"
@@ -198,21 +193,4 @@ fun! s:Layouts.draw(layoutid, align)
   elseif a:align ==? "justify"
     call self.alignJustify()
   endif
- 
-  " Resize the window to fit the requirements
-  "call self.resizeWindows()
-endfun
-
-fun! s:Layouts.resizeWindows()
-  execute('vert 1resize ' . ((&columns * 41 + 100) / 200))
-  execute('2resize ' . ((&lines * 42 + 28) / 56))
-  execute('vert 2resize ' . ((&columns * 87 + 100) / 200))
-  execute('3resize ' . ((&lines * 42 + 28) / 56))
-  execute('vert 3resize ' . ((&columns * 70 + 100) / 200))
-  execute('4resize ' . ((&lines * 11 + 28) / 56))
-  execute('vert 4resize ' . ((&columns * 158 + 100) / 200))
-
-  execute("call win_gotoid(win_getid(1)) | set wfw")
-  execute("call win_gotoid(win_getid(3)) | set wfw")
-  execute("call win_gotoid(win_getid(4)) | set wfh")
 endfun
