@@ -5,17 +5,22 @@ endif
 let g:loaded_ide_autoload = 1
 
 fun! ide#init()
-  runtime lib/ide/buffer.vim
+  "runtime lib/ide/buffer.vim
+  runtime lib/ide/editor.vim
+  runtime lib/ide/editors.vim
+  runtime lib/ide/panel.vim
   runtime lib/ide/bar.vim
   runtime lib/ide/bars.vim
   runtime lib/ide/widget.vim
   runtime lib/ide/widgets.vim
+  runtime lib/ide/layouts.vim
   runtime lib/ide/layout.vim
-  runtime lib/ide/terminal.vim
+  "runtime lib/ide/terminal.vim
   runtime lib/ide/ide.vim
 endfun
 
 fun! ide#loadlib(path)
+  call ide#debug(3, "ide#loadlib", "Loading lib " . a:path)
   execute 'runtime lib/' . a:path . '.vim'
 endfun
 
@@ -64,15 +69,3 @@ fun! ide#initCommands()
   command! -n=0 IdeToggleTerminal call g:Ide.toggleTerminal()
   command! -n=0 IdeOpenTerminalAndFocus call g:Ide.openTerminalAndFocus()
 endfun
-
-fun! ide#newBlankBuffer(bufname)
-  execute 'silent! new'
-  let l:bufnr = bufnr('$')
-  call setbufvar(l:bufnr, "&buflisted", 0)
-  call setbufvar(l:bufnr, '&number', 0)
-  call setbufvar(l:bufnr, '&list', 0)
-  execute 'silent! file ' . a:bufname
-
-  call win_execute(bufwinid(l:bufnr), 'close!')
-endfun!
-

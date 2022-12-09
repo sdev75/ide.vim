@@ -1,6 +1,35 @@
 let s:Bars = {}
 let g:IdeBars = s:Bars
 
+let s:bars = {}
+
+fun! s:Bars.get(barid)
+  let l:bar = get(s:bars, a:barid, {})
+  if len(keys(l:bar))
+    call g:Ide.debug(3, "Bars.get",
+          \ "Returning existing instance of barid " .. a:barid)
+    return l:bar
+  endif
+
+  call g:Ide.debug(3, "Bars.get",
+          \ "Creating new instance for barid: " .. a:barid)
+  let l:barid = g:IdeBar.new(a:barid)
+  let s:bars[a:barid] = l:bar
+  return l:bar
+endfun
+
+" Returns an instance of the primary bar
+" Usually located on the left side
+fun! s:Bars.getPrimaryBar()
+  return self.get(0)
+endfun
+
+" Returns an instance of the secondary bar
+" Usually located on the right side
+fun! s:Bars.getSecondaryBar()
+  return self.get(1)
+endfun
+
 fun! s:Bars.getWidgetInstances(bar)
   call ide#debug(4, "IdeBars.getWidgetInstances",
         \ " bar " . a:bar.id .

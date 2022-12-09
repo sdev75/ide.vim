@@ -1,9 +1,10 @@
 # ide.vim
-vim script for handling a rudimentary IDE implementation
+
+IDE is a set of VIM scripts to help organize windows while developing software.
 
 ## Installation
 
-It's recommend to use VIM 8 packadd functionality.
+Download the code and then use `packadd` to enable the plugin
 
 ```vim
 packadd ide
@@ -12,54 +13,75 @@ if exists('Ide')
 endif
 ```
 
-## Layouts, bars and widgets
+## Ide
+
+The Ide class is the base class of the entire plugin. It acts as a controller between layouts and everything within it.
+
+```c++
+// Initializes a layout and returns an object of type 'IdeLayout'
+// It wraps around the IdeLayouts.get() function to perform the logic
+int Ide::getLayout(int layoutid)
+```
+
+## Layouts
+
+Every layout is virtually mapped to the current `tabpagenr` value. Therefore, it is possible to have virtually any number of layouts for every tab opened.
+
+Here is a list of functions for the Layouts code:
+
+```c++
+// Initializes a layout or returns an existing instance
+Layout Layouts::get(int layoutid)
+```
+
+The `Layout` class offers the following methods:
+
+```c++
+// Constructs and initializes a Layout object
+Layout Layout::new(int layoutid)
+```
+
+## Layouts, panel, bars and widgets
 
 This vim script is structured using layouts, bars (or sidebars) and widgets.
 Layouts provide you with a virtual interface that you can switch to when using
 tabs. A layout is generally indexed using the tab number using the result of
 the `tabpagenr()` function. However, this script allows you to create arbitrary
-virtual layouts. 
+virtual layouts.
 
 ### Bars or sidebars
-A layout has 4 sidebars sorted by position (left, bottom, top, right). 
+A layout is composed of a panel, two sidebars and widgets.
+
+### Panel
+The panel is the component used for displaying logs or running terminal commands
+A panel can be aligned either by `left`, `right`, `center` or `justify`.
 
 ### Widgets
-Every bar might have one ore more widgets. Widgets are shared globally but
-constructed individually for every layout's sidebar, giving full flexibility.
+A bar and the panel might have one ore more widgets plugged in. 
+Widgets are shared globally but constructed individually 
+for every layout, giving full flexibility.
 An example showing this functionality can be found in the `widget` folder.
 
-## Basic usage
+## Layout Configuration
 
-This is a very brief and incomplete usage instroduction. I will update it
-whenever possible.
-
-Toggling a bar would be as easy as calling the command `:IdeToggleBar
-<position>`, where position could either be `left`, `bottom`, `top,` or
-`right`.
+A layout has a configuration which can be setup in your .vimrc file.
+If no configuration is passed in, a default configuration is created using
+default parameters.
 
 ```vim
-nnoremap <leader>h :IdeToggleBar left<cr>
-nnoremap <leader>j :IdeToggleBar bottom<cr>
-nnoremap <leader>l :IdeToggleBar right<cr>
+let cfg = g:IdeLayoutConfig.new()
+call cfg.setPanelAlignment("right")   " Align panel to the right (default)
+call cfg.setPanelVisibility(0)        " Hide panel (default)
+
+call cfg.setLeftBarVisibility(0)      " Hide left sidebar (default)
+call cfg.setRightBarVisibility(1)     " Show right sidebar
+
+" Setting the config for the current layout
+call g:Ide.getLayout().setConfig(cfg)
+
+" Force layout to be redrawn
+call g:Ide.redraw()
 ```
-
-Configuration options can be overriden within your .vimrc file.
-
-```vim
-" set bottom bar to be 7.5% of total height
-let g:IdeBarMinWidthPctBottom = 7.5
-```
-
-Layout can have 4 sticky modes. Each mode determines the stickiness of the sidebar. 
-
-```vim
-" 0 = left bar
-" 1 = right bar
-" 2 = bottom bar
-" 3 = left and right
-let g:IdeBarStickyMode = 2
-```
-Setting it to 2 as above would force the bottom bar to be always taking up the whole width.
 
 ### Widgets
 Widgets are loaded manually to avoid too much processing.
@@ -109,3 +131,6 @@ makefile#readcmd(makefile, target, vars)
 ## Disclaimer
 This script is for personal use, and it's still early development phase. I will
 add more information as I continue to make progress.
+
+## v2.0
+New version under development, this file will update with more information.

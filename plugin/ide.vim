@@ -1,5 +1,5 @@
 " ==
-" Description: basic rudimentary helper to handle ide functionality
+" Description: layout manager with functionalities
 " Maintainer: github.com/sdev75
 " License: MIT
 " ==
@@ -28,7 +28,7 @@ augroup Ide
   autocmd VimResized  * doautocmd User OnIdeResize
   autocmd VimEnter    * doautocmd User OnIdeInit
   autocmd VimLeavePre * doautocmd User OnIdeShutdown
-  autocmd FileType c,cpp,h call ide#loadlib('ide/c')
+  autocmd FileType c,cpp,cc,h,hpp call ide#loadlib('ide/c')
 augroup END
 
 call ide#init()

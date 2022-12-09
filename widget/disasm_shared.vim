@@ -71,8 +71,8 @@ augroup ide_widget_disasm
   autocmd!
   autocmd User IdeWidgetOpen  call s:trydisasm()
   "autocmd User IdeCInit       call s:disasm()
-  autocmd BufWritePost *.c    call s:disasm()
-  autocmd CursorMoved *.c     call s:gotoline()
+  autocmd BufWritePost *.c,*.cpp,*.cc    call s:disasm()
+  autocmd CursorMoved *.c,*.cpp,*.cc     call s:gotoline()
 augroup END
 
 fun! s:trydisasm()

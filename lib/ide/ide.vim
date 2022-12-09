@@ -13,26 +13,13 @@ function! s:Ide.setRootpath(...)
   let self.rootpath_ = l:abspath
 endfunction
 
-fun! s:Ide.initLayout_(layoutid)
-  let l:layout = g:IdeLayout.new(a:layoutid)
-  let self.layouts[a:layoutid] = l:layout
-  return self.layouts[a:layoutid]
-endfun
-
 fun! s:Ide.getLayout(...)
-  if !len(a:000) || a:1 == -1
+  if !len(a:000) || a:1 == 1
     let l:layoutid = tabpagenr()
   else
     let l:layoutid = a:1
   endif
- 
-  call ide#debug(5, "Ide.getLayout",
-        \ "getLayout() called. Layoutid " . l:layoutid)
-
-  if !has_key(self.layouts, l:layoutid)
-    return self.initLayout_(l:layoutid)
-  endif
-  return self.layouts[l:layoutid]
+  return g:IdeLayouts.get(l:layoutid)
 endfun
 
 fun! s:Ide.toggleBar(pos)
@@ -59,6 +46,30 @@ endfun
 
 fun! s:Ide.init_()
   call self.getLayout()
+endfun
+
+fun! s:Ide.log(type, level, prefix, data)
+  if a:type ==? "info"
+    return self.logger.info(a:level, a:prefix, a:data)
+  elseif a:type ==? "warn"
+    return self.logger.warn(a:level, a:prefix, a:data)
+  elseif a:type ==? "error"
+    return self.logger.error(a:level, a:prefix, a:data)
+  elseif a:type ==? "debug"
+    return self.debug(a:level, a:prefix, a:data)
+  endif
+endfun
+
+fun! s:Ide.debug(level, prefix, msg)
+  return self.logger.debug(a:level, a:prefix, a:msg)
+endfun
+
+fun! s:Ide.logmsg(msg)
+  return self.logger.debug(1, "", a:msg)
+endfun
+
+fun! s:Ide.setLogger(logger)
+  let self.logger = a:logger
 endfun
 
 fun! s:Ide.shutdown_()

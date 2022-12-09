@@ -206,7 +206,7 @@ fun! s:Bar.openWidgets()
         \ "Opening widgets for bar " . self.id)
 
   let l:widgets = g:IdeBars.getWidgetInstances(self)
-
+  
   if len(l:widgets) == 0
     call ide#debug(3, "Bar.openWidgets",
           \ "There are no widgets to open. Bye")
@@ -226,7 +226,7 @@ endfun
 fun! s:Bar.resizeWidgets()
   call ide#debug(3, "Bar.resizeWidgets",
         \ "Resize wdigets for bar " . self.id)
-
+  
   let l:widgets = g:IdeBars.getWidgetInstances(self)
   
   " nothing to do if there are no widgets, right?

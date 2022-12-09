@@ -42,9 +42,16 @@ fun! s:Logger.add_(type, level, prefix, msg)
   endif
   
   let l:date = strftime("%c")
-  let l:buf = l:date . " | [" . toupper(a:type) . "]" . 
-        \ "[" . a:prefix . "]" .
-        \ " " . a:msg
+  if type(a:msg) == v:t_func || 
+        \ type(a:msg) == v:t_list ||
+        \ type(a:msg) == v:t_dict
+    let l:msg = string(a:msg)
+  else
+    let l:msg = a:msg
+  endif
+
+  let l:buf = printf("%s [%5s] %15s: %s\n",
+        \ l:date, toupper(a:type), a:prefix, l:msg)
 
   let l:bufnr = bufnr(s:bufname)
   if l:bufnr == -1
@@ -52,6 +59,7 @@ fun! s:Logger.add_(type, level, prefix, msg)
     return -1
   endif
   call appendbufline(l:bufnr, '$', split(l:buf, "\n")) 
+  call win_execute(bufwinid(l:bufnr),'normal! G')
 endfun
 
 fun! s:Logger.info(level, prefix, msg)
