@@ -86,5 +86,5 @@ augroup IdeLib
   autocmd!
   autocmd User OnIdeInit      call s:Ide.init_()
   autocmd User OnIdeShutdown  call s:Ide.shutdown_()
-  autocmd User OnIdeResize    call s:Ide.getLayout().redraw()
+  autocmd User OnIdeResize    call s:Ide.redraw()
 augroup END
