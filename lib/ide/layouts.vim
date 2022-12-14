@@ -16,7 +16,7 @@ fun! s:Layouts.get(layoutid)
   " Assign default configuration data
   " One way to override this is to create the layout manually
   " The instance will be returned instead of reaching this line
-  let l:layout = g:IdeLayout.new(a:layoutid, g:IdeLayoutConfig.new())
+  let l:layout = g:IdeLayout.new(a:layoutid, g:IdeLayoutConfig.new({}))
   let s:layouts[a:layoutid] = l:layout
   
   return l:layout
@@ -94,15 +94,10 @@ fun! s:Layouts.alignRight()
   execute("set winheight=1")
   execute("set winminwidth=0")
   execute("set winwidth=1")
-
-  execute('vert 1resize ' . ((&columns * 10 + 100) / 200))
-  execute('2resize ' . ((&lines * 42 + 28) / &lines))
-  execute('vert 2resize ' . ((&columns * 87 + 100) / 200))
-  execute('3resize ' . ((&lines * 42 + 28) / &lines))
-  execute('vert 3resize ' . ((&columns * 70 + 100) / 200))
-  execute('4resize ' . ((&lines * 11 + 28) / &lines))
-  execute('vert 4resize ' . ((&columns * 180 + 100) / 200))
-
+  execute('4resize ' . (&lines * (20 - 1) / 100) )
+  execute('vert 1resize ' . float2nr(&columns * (20.0 / 100)))
+  execute('vert 3resize ' . float2nr(&columns * (35.0 / 100)))
+  
   execute("call win_gotoid(win_getid(1)) | set wfw")
   execute("call win_gotoid(win_getid(3)) | set wfw")
   execute("call win_gotoid(win_getid(4)) | set wfh")
@@ -181,8 +176,12 @@ fun! s:Layouts.draw(align)
   let l:bufnr = self.getPlaceholderBufnr()
 
   " Close all except one and assign it the placeholder
+  if exists("g:A")
+    return
+  endif
   execute("only! | b!" .. l:bufnr)
-  
+  "let g:A = 1
+
   " Perform the alignment of choice
   if a:align ==? "left"
     call self.alignLeft()

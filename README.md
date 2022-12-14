@@ -12,17 +12,16 @@ if exists('Ide')
   " do remapping
 endif
 ```
+By default the IDE will draw the layout upon initialization. However, this might not always be the desired outcome. It's possible to disable the automatic drawing by setting the global variable `g:IdeAutoDraw` to 0.
 
-By default the IDE plugin is automatically initializing itself. This may not be the desired behaviour. It is possible to disable auto initialization of the IDE plugin by setting the global variable `g:IdeAutoInit` to 0.
-
-An example below shows how to manually initialize the IDE plugin with a shortcut:
+An example below shows how to manually draw the IDE plugin with a shortcut:
 
 ```vim
 " Disable auto initialization (the layout wont be drawn)
-let g:IdeAutoInit = 0
+let g:IdeAutoDraw = 0
 
 " Initialize the IDE (the layout will be drawn according to the settings)
-nnoremap <leader>ii :call g:Ide.init()<cr>
+nnoremap <leader>ii :call g:Ide.redraw()<cr>
 ```
 
 ### Init and shutdown callbacks
@@ -148,12 +147,15 @@ default parameters.
 
 ```vim
 let cfg = g:IdeLayoutConfig.new()
-call cfg.setPanelAlignment("right")   " Align panel to the right (default)
-call cfg.setPanelVisibility(0)        " Hide panel (default)
-call cfg.setPanelHeightPct(25)        " Sets the height percentage allocation
+let cfg.panelAlignment("right")   " Align panel to the right (default)
+let cfg.panelVisibility(0)        " Hide panel (default)
+let cfg.panelHeightPct(25)        " Sets the height percentage allocation
 
-call cfg.setLeftBarVisibility(0)      " Hide left sidebar (default)
-call cfg.setRightBarVisibility(1)     " Show right sidebar
+" Alternatively, all in one shot
+let cfg = g:IdeLayoutConfig.new(#{
+\ leftBarWidthPct: 20,
+\ rightBarWidthPct: 30,
+\ })
 
 " Setting the config for the current layout
 call g:Ide.getLayout().setConfig(cfg)

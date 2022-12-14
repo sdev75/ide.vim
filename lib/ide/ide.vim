@@ -12,39 +12,40 @@ let g:Ide = s:Ide
 
 let s:Ide.pluginpath = expand('<sfile>:p:h:h:h')
 
-fun! g:Ide.Abc(level)
-  echom "level is " a:level
-endfun
-fun! s:init(forceInit)
-  if a:forceInit == 0
-    call g:Ide.debug(3, "Init",
-          \ "Skipping IDE initialization. Hasta luego!")
-    return -1
-  endif
-  
-  " Initialize IDE on demand
-  call g:Ide.debug(3, "init_",
-        \ "Initializing Ide using internal init_()")
-  
+fun! s:init(autoDraw = 1)
+  call g:Ide.debug(3, "init",
+        \ "Initializing Ide object")
   " Self modify the IDE global object to use concrete implementation
   let l:sid = expand('<SID>')
   let g:Ide.getLayout = function(l:sid .. 'getLayout')
   let g:Ide.redraw = function(l:sid .. 'redraw')
-  
   " Clearing the init to avoid subsequent calls to it
   let g:Ide.init = { -> -1 }
 
   " Binding shutdown
   let g:Ide.shutdown = function(l:sid .. 'shutdown')
-  
-  " Linking 'User' events together
-  augroup Ide
-    autocmd User OnIdeShutdown  call g:Ide.shutdown()
-    autocmd User OnIdeResize    call g:Ide.redraw()
-  augroup END
 
-  " Fire User Ide resize event (redraws the layout)
-  do User OnIdeResize
+  call s:setAutoDraw(a:autoDraw)
+endfun
+
+fun! s:setAutoDraw(enable)
+  if a:enable == 1
+    call g:Ide.debug(3, "setAutoDraw","Enabling IdeAutoDraw")
+    " Linking 'User' events together
+    augroup IdeLibAutoDraw
+      au User OnIdeResize    call g:Ide.redraw()
+    augroup END
+    " Fire User Ide resize event (redraws the layout)
+    do User OnIdeResize
+    return
+  endif
+
+  call g:Ide.debug(3, "setAutoDraw","Disabling IdeAutoDraw")
+  " Remove autocommands
+  augroup IdeLibAutoDraw
+    au!
+  augroup END
+  return
 endfun
 
 fun! s:shutdown()
@@ -67,7 +68,9 @@ endfun
 
 " Redraw current layout
 fun! s:redraw()
-  return s:Ide.getLayout().draw()
+  let l:layout = g:Ide.getLayout()
+  let l:alignment = l:layout.getConfig().panelAlignment
+  return g:IdeLayouts.draw(l:alignment)
 endfun
 
 fun! s:Ide.init()
@@ -91,36 +94,36 @@ fun! s:Ide.setLogger(logger, level = -1)
   let g:Ide.logmsg = function(funcref('g:Ide.logger.log'), ["debug",1,""], g:Ide)
 endfun
 
-fun! s:Ide.getRootpath()
-  return self.rootpath_
-endfunction
+"fun! s:Ide.getRootpath()
+"  return self.rootpath_
+"endfunction
+"
+"fun! s:Ide.setRootpath(...)
+"  let l:abspath = get(a:, 1, expand("%:p:h"))
+"  let self.rootpath_ = l:abspath
+"endfun
 
-fun! s:Ide.setRootpath(...)
-  let l:abspath = get(a:, 1, expand("%:p:h"))
-  let self.rootpath_ = l:abspath
-endfun
-
-fun! s:Ide.toggleBar(pos)
-  let l:layout = self.getLayout()
-  call l:layout['toggleBar'](a:pos)
-  " return to previous winid
-  call win_gotoid(l:layout.getvar('originWinid', -1))
-endfun
-
-fun! s:Ide.toggleTerminal()
-  let l:layout = self.getLayout()
-  call l:layout['toggleTerminal'](g:IdeTerminalPos)
-  let l:bar = l:layout.getBar(l:layout.getBarId(g:IdeTerminalPos))
-  call win_gotoid(l:bar.getWinid())
-endfun
-
-fun! s:Ide.openTerminalAndFocus()
-  let l:layout = self.getLayout()
-  let l:barid = l:layout.getBarId(g:IdeTerminalPos)
-  let l:bar = l:layout.getBar(l:barid)
-  call l:layout.openBar(l:barid)
-  call win_gotoid(l:bar.getWinid())
-endfun
+"fun! s:Ide.toggleBar(pos)
+"  let l:layout = self.getLayout()
+"  call l:layout['toggleBar'](a:pos)
+"  " return to previous winid
+"  call win_gotoid(l:layout.getvar('originWinid', -1))
+"endfun
+"
+"fun! s:Ide.toggleTerminal()
+"  let l:layout = self.getLayout()
+"  call l:layout['toggleTerminal'](g:IdeTerminalPos)
+"  let l:bar = l:layout.getBar(l:layout.getBarId(g:IdeTerminalPos))
+"  call win_gotoid(l:bar.getWinid())
+"endfun
+"
+"fun! s:Ide.openTerminalAndFocus()
+"  let l:layout = self.getLayout()
+"  let l:barid = l:layout.getBarId(g:IdeTerminalPos)
+"  let l:bar = l:layout.getBar(l:barid)
+"  call l:layout.openBar(l:barid)
+"  call win_gotoid(l:bar.getWinid())
+"endfun
 
 " Assign a callback to list of callbacks
 fun! s:Ide.setCallback(name, callback)
@@ -138,6 +141,7 @@ fun! s:Ide.runCallback(name, payload)
 endfun
 
 augroup IdeLib
-  autocmd!
-  autocmd User OnIdeInit      call s:init(g:IdeAutoInit)
+  au!
+  au User OnIdeInit      call s:init(g:IdeAutoDraw)
+  au User OnIdeShutdown  call g:Ide.shutdown()
 augroup END
