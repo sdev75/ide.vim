@@ -13,6 +13,27 @@ if exists('Ide')
 endif
 ```
 
+By default the IDE plugin is automatically initializing itself. This may not be the desired behaviour. It is possible to disable auto initialization of the IDE plugin by setting the global variable `g:IdeAutoInit` to 0.
+
+An example below shows how to manually initialize the IDE plugin with a shortcut:
+
+```vim
+" Disable auto initialization (the layout wont be drawn)
+let g:IdeAutoInit = 0
+
+" Initialize the IDE (the layout will be drawn according to the settings)
+nnoremap <leader>ii :call g:Ide.init()<cr>
+```
+
+### Init and shutdown callbacks
+
+It's possible to customize the init and shutdown routine by adding your own callback. This is experimental and I might consider removing it.
+
+```vim
+call g:Ide.setCallback("shutdown",
+      \  {payload -> execute('call g:Ide.logmsg(string(payload))','') })
+```
+
 ## Ide
 
 The Ide class is the base class of the entire plugin. It acts as a controller between layouts and everything within it.
@@ -21,6 +42,63 @@ The Ide class is the base class of the entire plugin. It acts as a controller be
 // Initializes a layout and returns an object of type 'IdeLayout'
 // It wraps around the IdeLayouts.get() function to perform the logic
 int Ide::getLayout(int layoutid)
+```
+
+### Ide autocmd groups
+
+Ide has a few user defined auto commands for events such as when starting VIM, leaving it and resize the VIM screen.
+
+Here is a list of all the user autocommands defined in `plugin/ide.vim`:
+
+```vim
+au VimEnter     * do User onIdeInit
+au VimLeavePre  * do User onIdeShutdown
+au VimResized   * do User onIdeResize
+```
+
+There are also several `FileType` options for C and C++ files. These might be refactored later on with the support of more programming languages.
+
+### IDE autoload functions (core functionality)
+
+Ide autoload has a set of functions for loading up libraries, core files and setting up commands.
+
+Here is the list of the major functions defined in `autoload/ide.vim`:
+
+```c++
+" Loads the core files necessary for starting up the Ide plugin
+ide::initCoreFiles(void)
+
+" Loads a library file located in the lib folder
+" It executes a runtime command
+ide::loadlib(string)
+
+" Loads a widget in the same way loadlib loads a library
+ide::loadwidget(string)
+```
+
+## IDE Logger
+
+I decided to go for logging data using a class and writing the data to a buffer rather than using `echom`. This decision was made to improve flexibility and personal preference. It also allows the debugs to be displayed wherever I need.
+
+By the default, there is no logging setup. Logging can be turned on by loading the logger library and assigning the `IdeLogger` object to the IDE instance.
+
+Here's an example on how to do what I just said:
+```vim
+call ide#loadlib('ide/logger)
+call g:Ide.setLogger(IdeLogger, 5)    " 5 referes to the verbosity level
+```
+
+Once the logger is assigned successfully, every log action is fired within the log object. This allows customization by creating a different Logger object and assign it to the IDE.
+
+A Logger object must declare the following functions:
+
+```vim
+setVerbosityLevel(level)
+add(type, level, prefix, msg)
+info(level, prefix, msg)
+warn(level, prefix, msg)
+error(level, prefix, msg)
+debug(level, prefix, msg)
 ```
 
 ## Layouts
@@ -72,6 +150,7 @@ default parameters.
 let cfg = g:IdeLayoutConfig.new()
 call cfg.setPanelAlignment("right")   " Align panel to the right (default)
 call cfg.setPanelVisibility(0)        " Hide panel (default)
+call cfg.setPanelHeightPct(25)        " Sets the height percentage allocation
 
 call cfg.setLeftBarVisibility(0)      " Hide left sidebar (default)
 call cfg.setRightBarVisibility(1)     " Show right sidebar

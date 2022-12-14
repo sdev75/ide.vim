@@ -162,16 +162,16 @@ fun! s:C.initWidgets()
 endfun
 
 augroup IdeLibC
-  autocmd!
-  autocmd BufRead,BufEnter,BufWritePost *.c,*.cc,*cpp   call IdeC.init()
-  autocmd BufRead,BufEnter,BufWritePost *.h,*.hpp       call IdeC.init()
-  autocmd BufEnter *.c,*.cc,*.cpp
+  au!
+  au BufRead,BufEnter,BufWritePost *.c,*.cc,*cpp   call IdeC.init()
+  au BufRead,BufEnter,BufWritePost *.h,*.hpp       call IdeC.init()
+  au BufEnter *.c,*.cc,*.cpp
         \ nnoremap <buffer><leader>s :call IdeC.switchToHeader()<cr>
-  autocmd BufEnter *.h,*.hpp
+  au BufEnter *.h,*.hpp
         \ nnoremap <buffer><leader>s :call IdeC.switchToSource()<cr>
-  autocmd BufEnter *.c,*.cc,*.cpp,*_pp
+  au BufEnter *.c,*.cc,*.cpp,*_pp
         \ nnoremap <buffer><leader>i :call IdeC.switchToPreprocessed()<cr>
-  autocmd BufEnter *.c,*.cc,*.cpp,*_asm
+  au BufEnter *.c,*.cc,*.cpp,*_asm
         \ nnoremap <buffer><leader>a :call IdeC.switchToAssembly()<cr>
 augroup END
 

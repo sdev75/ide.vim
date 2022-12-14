@@ -164,6 +164,10 @@ fun! s:Layout.getvar(key, default)
   return get(self.vars_, a:key, a:default)
 endfun
 
+" @deprecated
+" This is NOT reliable as there might be room for more sub levels.
+" A better solution has already been implemented.
+" This function will be deleted in the future
 fun! s:Layout.getWidth()
   let l:list = winlayout(self.id)
   call g:Ide.debug(3, "Layout.getWidth", l:list)
@@ -284,16 +288,4 @@ fun! s:Layout.getWidth()
 
   call g:Ide.debug(3, "Layout.getWidth", "Calculated width is " .. l:width)
   return l:width
-endfun
-
-fun! s:Layout.getHeight()
-  let l:list = winlayout(self.id)
-  call g:Ide.debug(3, "Layout.getHeight", l:list)
-
-  let l:height = -1
-
-  "if l:list[0] ==? "leaf"
-
-  call g:Ide.debug(3, "Layout.getHeight", "Calculated height is " .. l:width)
-  return l:height
 endfun

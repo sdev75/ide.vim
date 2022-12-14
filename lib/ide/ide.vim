@@ -1,21 +1,62 @@
-let s:Ide = {}
+let s:Ide = #{
+      \ shutdown: { -> -1 },
+      \ redraw: { -> -1 },
+      \ getLayout: { -> -1 },
+      \ log: { -> -1 },
+      \ logmsg: { -> -1 },
+      \ debug: { -> -1 },
+      \ layouts: {},
+      \ callbacks: {},
+      \ }
 let g:Ide = s:Ide
 
 let s:Ide.pluginpath = expand('<sfile>:p:h:h:h')
-let s:Ide.layouts = {}
 
-function! s:Ide.getRootpath()
-  return self.rootpath_
-endfunction
+fun! g:Ide.Abc(level)
+  echom "level is " a:level
+endfun
+fun! s:init(forceInit)
+  if a:forceInit == 0
+    call g:Ide.debug(3, "Init",
+          \ "Skipping IDE initialization. Hasta luego!")
+    return -1
+  endif
+  
+  " Initialize IDE on demand
+  call g:Ide.debug(3, "init_",
+        \ "Initializing Ide using internal init_()")
+  
+  " Self modify the IDE global object to use concrete implementation
+  let l:sid = expand('<SID>')
+  let g:Ide.getLayout = function(l:sid .. 'getLayout')
+  let g:Ide.redraw = function(l:sid .. 'redraw')
+  
+  " Clearing the init to avoid subsequent calls to it
+  let g:Ide.init = { -> -1 }
 
-function! s:Ide.setRootpath(...)
-  let l:abspath = get(a:, 1, expand("%:p:h"))
-  let self.rootpath_ = l:abspath
-endfunction
+  " Binding shutdown
+  let g:Ide.shutdown = function(l:sid .. 'shutdown')
+  
+  " Linking 'User' events together
+  augroup Ide
+    autocmd User OnIdeShutdown  call g:Ide.shutdown()
+    autocmd User OnIdeResize    call g:Ide.redraw()
+  augroup END
+
+  " Fire User Ide resize event (redraws the layout)
+  do User OnIdeResize
+endfun
+
+fun! s:shutdown()
+  call g:Ide.debug(3, "shutdown", 
+        \ "Shutting down IDE")
+  let payload = {'event': 'shutdown'}
+  call s:Ide.runCallback("shutdown", l:payload)
+endfun
 
 " Get instance of a layout
 " When no argument, it is returned the layout by tabpagenr
-fun! s:Ide.getLayout(...)
+fun! s:getLayout(...)
   if !len(a:000) || a:1 == 1
     let l:layoutid = tabpagenr()
   else
@@ -25,8 +66,38 @@ fun! s:Ide.getLayout(...)
 endfun
 
 " Redraw current layout
-fun! s:Ide.redraw()
-  return self.getLayout().draw()
+fun! s:redraw()
+  return s:Ide.getLayout().draw()
+endfun
+
+fun! s:Ide.init()
+  call <SID>init(1)
+endfun
+
+" Assign a logger instance to the Ide object
+" A level will be assigned if the level arg is not -1
+" This allows call to setLogger without altering the internal properties
+" which might have been previously initialized before injection
+fun! s:Ide.setLogger(logger, level = -1)
+  if a:level != -1
+    call a:logger.setVerbosityLevel(a:level)
+  endif
+
+  let self.logger = a:logger
+  
+  " Using partials to avoid code repetition
+  let g:Ide.log = function(funcref('g:Ide.logger.log'), g:Ide.logger)
+  let g:Ide.debug = function(funcref('g:Ide.logger.log'), ['debug'], g:Ide.logger)
+  let g:Ide.logmsg = function(funcref('g:Ide.logger.log'), ["debug",1,""], g:Ide)
+endfun
+
+fun! s:Ide.getRootpath()
+  return self.rootpath_
+endfunction
+
+fun! s:Ide.setRootpath(...)
+  let l:abspath = get(a:, 1, expand("%:p:h"))
+  let self.rootpath_ = l:abspath
 endfun
 
 fun! s:Ide.toggleBar(pos)
@@ -51,40 +122,22 @@ fun! s:Ide.openTerminalAndFocus()
   call win_gotoid(l:bar.getWinid())
 endfun
 
-fun! s:Ide.init_()
-  return self.getLayout().draw()
+" Assign a callback to list of callbacks
+fun! s:Ide.setCallback(name, callback)
+  let self.callbacks[a:name] = a:callback
 endfun
 
-fun! s:Ide.log(type, level, prefix, data)
-  if a:type ==? "info"
-    return self.logger.info(a:level, a:prefix, a:data)
-  elseif a:type ==? "warn"
-    return self.logger.warn(a:level, a:prefix, a:data)
-  elseif a:type ==? "error"
-    return self.logger.error(a:level, a:prefix, a:data)
-  elseif a:type ==? "debug"
-    return self.debug(a:level, a:prefix, a:data)
+" Execute callback by name
+fun! s:Ide.runCallback(name, payload)
+  if has_key(self.callbacks, a:name)
+    call g:Ide.debug(3, "Ide.invokeCallback",
+          \ "Callback fired: " .. a:name
+          \ .. " payload: " .. string(a:payload))
+    call self.callbacks[a:name](a:payload)
   endif
-endfun
-
-fun! s:Ide.debug(level, prefix, msg)
-  return self.logger.debug(a:level, a:prefix, a:msg)
-endfun
-
-fun! s:Ide.logmsg(msg)
-  return self.logger.debug(1, "", a:msg)
-endfun
-
-fun! s:Ide.setLogger(logger)
-  let self.logger = a:logger
-endfun
-
-fun! s:Ide.shutdown_()
 endfun
 
 augroup IdeLib
   autocmd!
-  autocmd User OnIdeInit      call s:Ide.init_()
-  autocmd User OnIdeShutdown  call s:Ide.shutdown_()
-  autocmd User OnIdeResize    call s:Ide.redraw()
+  autocmd User OnIdeInit      call s:init(g:IdeAutoInit)
 augroup END

@@ -4,7 +4,7 @@ endif
 
 let g:loaded_ide_autoload = 1
 
-fun! ide#init()
+fun! ide#initCoreFiles()
   runtime lib/ide/editor.vim
   runtime lib/ide/editors.vim
   runtime lib/ide/panel.vim
@@ -19,7 +19,6 @@ fun! ide#init()
 endfun
 
 fun! ide#loadlib(path)
-  call ide#debug(3, "ide#loadlib", "Loading lib " . a:path)
   execute 'runtime lib/' . a:path . '.vim'
 endfun
 
@@ -33,38 +32,8 @@ fun! ide#scriptloaded(type, path)
         \ 'v:val =~ ' . a:type . '/' . a:path . '.vim'))
 endfun
 
-fun! ide#debugmsg(prefix, msg)
-  if !g:IdeDebugVerbosity
-    return
-  endif
-  if len(a:prefix)
-    let l:prefix = " " . a:prefix . ": "
-  else
-    let l:prefix = " "
-  endif
-  let l:msg = "[DEBUG]" . l:prefix . a:msg
-  if g:IdeDebugVerbosity == 1
-    execute "normal! :echom \"" . l:msg . "\"\<CR><CR>"
-    return
-  endif
-  echom l:msg
-endfun
-
-" The higher the verbosity the more debugging is provided
-fun! ide#debug(level, prefix, msg)
-  if a:level > g:IdeDebugVerbosity
-    return
-  endif
-  let l:msg = "[DEBUG:" . a:level . "][" . a:prefix 
-        \ . "] " .  a:msg
-  if mode() == "V"
-    return
-  endif
-  execute "normal! :echom \"" . l:msg . "\"\<CR><CR>"
-endfun
-
-fun! ide#initCommands()
-  command! -n=1 IdeToggleBar call g:Ide.toggleBar(<f-args>)
-  command! -n=0 IdeToggleTerminal call g:Ide.toggleTerminal()
-  command! -n=0 IdeOpenTerminalAndFocus call g:Ide.openTerminalAndFocus()
-endfun
+"fun! ide#initCommands()
+"  command! -n=1 IdeToggleBar call g:Ide.toggleBar(<f-args>)
+"  command! -n=0 IdeToggleTerminal call g:Ide.toggleTerminal()
+"  command! -n=0 IdeOpenTerminalAndFocus call g:Ide.openTerminalAndFocus()
+"endfun

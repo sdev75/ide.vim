@@ -15,11 +15,11 @@ fun! s:Logger.constructor()
     call setbufvar(l:bufnr, '&number', 0)
     call setbufvar(l:bufnr, '&list', 0)
     execute 'silent! file ' . s:bufname
+    call win_execute(bufwinid(l:bufnr), 'close!')
   endif
 
-  "call win_execute(bufwinid(l:bufnr), 'close!')
   let s:constructed = 1
-  call win_execute(bufwinid(l:bufnr),'normal! ggdG')
+  "call win_execute(bufwinid(l:bufnr),'normal! ggdG')
 endfun
 
 fun! s:Logger.setVerbosityLevel(level)
@@ -58,8 +58,16 @@ fun! s:Logger.add_(type, level, prefix, msg)
     errmsg "The log buffer no longer exist"
     return -1
   endif
+
+  " Ensure the buf is loaded first
+  call bufload(l:bufnr)
+
+  " Append line to the buffer (use bufload)
   call appendbufline(l:bufnr, '$', split(l:buf, "\n")) 
-  call win_execute(bufwinid(l:bufnr),'normal! G')
+  
+  if bufwinid(l:bufnr) != -1
+    call win_execute(bufwinid(l:bufnr),'normal! G')
+  endif
 endfun
 
 fun! s:Logger.info(level, prefix, msg)
@@ -76,4 +84,8 @@ endfun
 
 fun! s:Logger.debug(level, prefix, msg)
   return self.add("debug", a:level, a:prefix, a:msg)
+endfun
+
+fun! s:Logger.log(type, level, prefix, data)
+  return self[a:type](a:level, a:prefix, a:data)
 endfun
