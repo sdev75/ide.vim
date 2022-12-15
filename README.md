@@ -20,8 +20,8 @@ An example below shows how to manually draw the IDE plugin with a shortcut:
 " Disable auto initialization (the layout wont be drawn)
 let g:IdeAutoDraw = 0
 
-" Initialize the IDE (the layout will be drawn according to the settings)
-nnoremap <leader>ii :call g:Ide.redraw()<cr>
+" Set automatic draw, it will also fire the OnIdeResize event
+nnoremap <leader>ii :call g:Ide.setAutoDraw(1)<cr>
 ```
 
 ### Init and shutdown callbacks

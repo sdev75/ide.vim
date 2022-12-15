@@ -9,12 +9,12 @@ let s:verbosity = 1
 fun! s:Logger.constructor()
   let l:bufnr = bufnr(s:bufname)
   if l:bufnr == -1
-    execute 'silent! new'
+    exe 'silent! new'
     let l:bufnr = bufnr('$')
     call setbufvar(l:bufnr, "&buflisted", 0)
     call setbufvar(l:bufnr, '&number', 0)
     call setbufvar(l:bufnr, '&list', 0)
-    execute 'silent! file ' . s:bufname
+    exe 'silent! file ' . s:bufname
     call win_execute(bufwinid(l:bufnr), 'close!')
   endif
 

@@ -13,11 +13,16 @@ let g:Ide = s:Ide
 let s:Ide.pluginpath = expand('<sfile>:p:h:h:h')
 
 fun! s:init(autoDraw = 1)
+  
+  " Using partials to avoid code repetition
+  let g:Ide.log = function(funcref('g:Ide.logger.log'), g:Ide.logger)
+  let g:Ide.debug = function(funcref('g:Ide.logger.log'), ['debug'], g:Ide.logger)
+  let g:Ide.logmsg = function(funcref('g:Ide.logger.log'), ["debug",1,""], g:Ide.logger)
+  
   call g:Ide.debug(3, "init",
         \ "Initializing Ide object")
   " Self modify the IDE global object to use concrete implementation
   let l:sid = expand('<SID>')
-  let g:Ide.getLayout = function(l:sid .. 'getLayout')
   let g:Ide.redraw = function(l:sid .. 'redraw')
   " Clearing the init to avoid subsequent calls to it
   let g:Ide.init = { -> -1 }
@@ -25,10 +30,10 @@ fun! s:init(autoDraw = 1)
   " Binding shutdown
   let g:Ide.shutdown = function(l:sid .. 'shutdown')
 
-  call s:setAutoDraw(a:autoDraw)
+  call g:Ide.setAutoDraw(a:autoDraw)
 endfun
 
-fun! s:setAutoDraw(enable)
+fun! s:Ide.setAutoDraw(enable)
   if a:enable == 1
     call g:Ide.debug(3, "setAutoDraw","Enabling IdeAutoDraw")
     " Linking 'User' events together
@@ -57,7 +62,7 @@ endfun
 
 " Get instance of a layout
 " When no argument, it is returned the layout by tabpagenr
-fun! s:getLayout(...)
+fun! s:Ide.getLayout(...)
   if !len(a:000) || a:1 == 1
     let l:layoutid = tabpagenr()
   else
@@ -68,9 +73,8 @@ endfun
 
 " Redraw current layout
 fun! s:redraw()
-  let l:layout = g:Ide.getLayout()
-  let l:alignment = l:layout.getConfig().panelAlignment
-  return g:IdeLayouts.draw(l:alignment)
+  let l:layoutConfig = g:Ide.getLayout().getConfig()
+  return g:IdeLayouts.draw(l:layoutConfig)
 endfun
 
 fun! s:Ide.init()
@@ -88,10 +92,6 @@ fun! s:Ide.setLogger(logger, level = -1)
 
   let self.logger = a:logger
   
-  " Using partials to avoid code repetition
-  let g:Ide.log = function(funcref('g:Ide.logger.log'), g:Ide.logger)
-  let g:Ide.debug = function(funcref('g:Ide.logger.log'), ['debug'], g:Ide.logger)
-  let g:Ide.logmsg = function(funcref('g:Ide.logger.log'), ["debug",1,""], g:Ide)
 endfun
 
 "fun! s:Ide.getRootpath()

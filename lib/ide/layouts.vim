@@ -6,13 +6,12 @@ let s:layouts = {}
 fun! s:Layouts.get(layoutid)
   let l:layout = get(s:layouts, a:layoutid, {})
   if len(keys(l:layout))
-    call g:Ide.debug(3, "Layouts.get",
-          \ "Returning existing instance of layoutid " .. a:layoutid)
     return l:layout
   endif
 
   call g:Ide.debug(3, "Layouts.get",
           \ "Creating new instance for layoutid: " .. a:layoutid)
+
   " Assign default configuration data
   " One way to override this is to create the layout manually
   " The instance will be returned instead of reaching this line
@@ -38,7 +37,7 @@ fun! s:Layouts.getPlaceholderBufnr()
   return l:bufnr
 endfun
 
-fun! s:Layouts.alignLeft()
+fun! s:Layouts.alignLeft(cfg)
   execute("set splitbelow splitright")
   execute("wincmd _ | wincmd |")
   execute("vsplit")
@@ -60,20 +59,16 @@ fun! s:Layouts.alignLeft()
   execute("set winminwidth=0")
   execute("set winwidth=1")
   
-  execute('1resize ' . ((&lines * 42 + 27) / 55))
-  execute( 'vert 1resize ' . ((&columns * 35 + 89) / 179))
-  execute( '2resize ' . ((&lines * 42 + 27) / 55))
-  execute( 'vert 2resize ' . ((&columns * 86 + 89) / 179))
-  execute( '3resize ' . ((&lines * 10 + 27) / 55))
-  execute( 'vert 3resize ' . ((&columns * 122 + 89) / 179))
-  execute( 'vert 4resize ' . ((&columns * 56 + 89) / 179))
+  execute('3resize ' .float2nr(&lines * (a:cfg.panelHeightPct / 100.00)))
+  execute('vert 1resize ' . float2nr(&columns * (a:cfg.leftBarWidthPct / 100.00)))
+  execute('vert 4resize ' . float2nr(&columns * (a:cfg.rightBarWidthPct / 100.00)))
   
   execute("call win_gotoid(win_getid(1)) | set wfw")
   execute("call win_gotoid(win_getid(3)) | set wfh")
   execute("call win_gotoid(win_getid(4)) | set wfw")
 endfun
 
-fun! s:Layouts.alignRight()
+fun! s:Layouts.alignRight(cfg)
   execute("set splitbelow splitright")
   execute("wincmd _ | wincmd |")
   execute("vsplit")
@@ -94,16 +89,17 @@ fun! s:Layouts.alignRight()
   execute("set winheight=1")
   execute("set winminwidth=0")
   execute("set winwidth=1")
-  execute('4resize ' . (&lines * (20 - 1) / 100) )
-  execute('vert 1resize ' . float2nr(&columns * (20.0 / 100)))
-  execute('vert 3resize ' . float2nr(&columns * (35.0 / 100)))
+
+  execute('4resize ' .float2nr(&lines * (a:cfg.panelHeightPct / 100.00)))
+  execute('vert 1resize ' . float2nr(&columns * (a:cfg.leftBarWidthPct / 100.00)))
+  execute('vert 3resize ' . float2nr(&columns * (a:cfg.rightBarWidthPct / 100.00)))
   
   execute("call win_gotoid(win_getid(1)) | set wfw")
   execute("call win_gotoid(win_getid(3)) | set wfw")
   execute("call win_gotoid(win_getid(4)) | set wfh")
 endfun
 
-fun! s:Layouts.alignCenter()
+fun! s:Layouts.alignCenter(cfg)
   execute("set splitbelow splitright")
   execute("wincmd _ | wincmd |")
   execute("vsplit")
@@ -124,19 +120,16 @@ fun! s:Layouts.alignCenter()
   execute("set winminwidth=0")
   execute("set winwidth=1")
   
-  execute('vert 1resize ' . ((&columns * 38 + 90) / 181))
-  execute('2resize ' . ((&lines * 41 + 27) / 55))
-  execute('vert 2resize ' . ((&columns * 85 + 90) / 181))
-  execute('3resize ' . ((&lines * 11 + 27) / 55))
-  execute('vert 3resize ' . ((&columns * 85 + 90) / 181))
-  execute('vert 4resize ' . ((&columns * 56 + 90) / 181))
+  execute('3resize ' .float2nr(&lines * (a:cfg.panelHeightPct / 100.00)))
+  execute('vert 1resize ' . float2nr(&columns * (a:cfg.leftBarWidthPct / 100.00)))
+  execute('vert 4resize ' . float2nr(&columns * (a:cfg.rightBarWidthPct / 100.00)))
 
   execute("call win_gotoid(win_getid(1)) | set wfw")
   execute("call win_gotoid(win_getid(3)) | set wfh")
   execute("call win_gotoid(win_getid(4)) | set wfw")
 endfun
 
-fun! s:Layouts.alignJustify()
+fun! s:Layouts.alignJustify(cfg)
   execute("set splitbelow splitright")
   execute("wincmd _ | wincmd |")
   execute("split")
@@ -157,21 +150,16 @@ fun! s:Layouts.alignJustify()
   execute("set winminwidth=0")
   execute("set winwidth=1")
 
-  execute('vert 1resize ' . ((&columns * 41 + 100) / 200))
-  execute('2resize ' . ((&lines * 42 + 28) / 56))
-  execute('vert 2resize ' . ((&columns * 87 + 100) / 200))
-  execute('3resize ' . ((&lines * 42 + 28) / 56))
-  execute('vert 3resize ' . ((&columns * 70 + 100) / 200))
-  execute('4resize ' . ((&lines * 11 + 28) / 56))
-  execute('vert 4resize ' . ((&columns * 158 + 100) / 200))
+  execute('4resize ' .float2nr(&lines * (a:cfg.panelHeightPct / 100.00)))
+  execute('vert 1resize ' . float2nr(&columns * (a:cfg.leftBarWidthPct / 100.00)))
+  execute('vert 3resize ' . float2nr(&columns * (a:cfg.rightBarWidthPct / 100.00)))
 
   execute("call win_gotoid(win_getid(1)) | set wfw")
   execute("call win_gotoid(win_getid(3)) | set wfw")
   execute("call win_gotoid(win_getid(4)) | set wfh")
 endfun
 
-" align stands for panel alignment (short for easy typing)
-fun! s:Layouts.draw(align)
+fun! s:Layouts.draw(layoutConfig)
   " Get default placeholder for all windows
   let l:bufnr = self.getPlaceholderBufnr()
 
@@ -182,14 +170,15 @@ fun! s:Layouts.draw(align)
   execute("only! | b!" .. l:bufnr)
   "let g:A = 1
 
+  let l:align = a:layoutConfig.panelAlignment
   " Perform the alignment of choice
-  if a:align ==? "left"
-    call self.alignLeft()
-  elseif a:align ==? "right"
-    call self.alignRight()
-  elseif a:align ==? "center"
-    call self.alignCenter()
-  elseif a:align ==? "justify"
-    call self.alignJustify()
+  if l:align ==? "left"
+    call self.alignLeft(a:layoutConfig)
+  elseif l:align ==? "right"
+    call self.alignRight(a:layoutConfig)
+  elseif l:align ==? "center"
+    call self.alignCenter(a:layoutConfig)
+  elseif l:align ==? "justify"
+    call self.alignJustify(a:layoutConfig)
   endif
 endfun
