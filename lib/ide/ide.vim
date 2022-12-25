@@ -73,8 +73,8 @@ endfun
 
 " Redraw current layout
 fun! s:redraw()
-  let l:layoutConfig = g:Ide.getLayout().getConfig()
-  return g:IdeLayouts.draw(l:layoutConfig)
+  let layoutConfig = g:Ide.getLayout().getConfig()
+  let layoutWinIds = g:IdeLayouts.draw(layoutConfig)
 endfun
 
 fun! s:Ide.init()

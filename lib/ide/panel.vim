@@ -5,6 +5,7 @@ let s:panel = #{
       \ tabs: {},
       \ visibility: -1,
       \ layoutid: -1,
+      \ winid: -1,
       \ }
 
 fun! s:Panel.new(layoutid)
@@ -26,6 +27,10 @@ fun! s:Panel.get___()
           \ "Creating new instance")
   let s:panel = self.new(a:layoutid)
   return s:panel
+endfun
+
+fun! s:Panel.setWinId(winid)
+  let self.winid = a:winid
 endfun
 
 fun! s:Panel.addTab(id, title, bufnr)

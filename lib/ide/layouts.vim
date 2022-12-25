@@ -3,7 +3,7 @@ let g:IdeLayouts = s:Layouts
 
 let s:layouts = {}
 
-let s:winlayout = #{
+let s:layoutWinIds = #{
       \ panel: -1,
       \ editor: -1,
       \ leftbar: -1,
@@ -108,7 +108,7 @@ fun! s:Layouts.alignRight(cfg)
  
   " Return a struct having list of matching winid
   " Useful for processing further
-  let l:res = copy(s:winlayout)
+  let l:res = copy(s:layoutWinIds)
   let l:res.panel = win_getid(4)
   let l:res.editor = win_getid(2)
   let l:res.leftbar = win_getid(1)
@@ -183,26 +183,28 @@ fun! s:Layouts.draw(layoutConfig)
   " Close all except one and assign it the placeholder
   execute("only! | b!" .. bufnr)
 
-  let align = a:layoutConfig.panelAlignment
   " Perform the alignment of choice
+  let align = a:layoutConfig.panelAlignment
   if align ==? "left"
-    call self.alignLeft(a:layoutConfig)
+    let layoutWinIds = self.alignLeft(a:layoutConfig)
   elseif align ==? "right"
-    let winlayout = self.alignRight(a:layoutConfig)
+    let layoutWinIds = self.alignRight(a:layoutConfig)
   elseif align ==? "center"
-    call self.alignCenter(a:layoutConfig)
+    let layoutWinIds = self.alignCenter(a:layoutConfig)
   elseif align ==? "justify"
-    call self.alignJustify(a:layoutConfig)
+    let layoutWinIds = self.alignJustify(a:layoutConfig)
   endif
 
-  call g:Ide.debug(3, "test", string(winlayout))
+  " Hide panel or sidebars based on config data
   if a:layoutConfig.panelVisibility == 0
-    call win_execute(winlayout.panel, 'close!')
+    call win_execute(layoutWinIds.panel, 'close!')
   endif
   if a:layoutConfig.leftBarVisibility == 0
-    call win_execute(winlayout.leftbar, 'close!')
+    call win_execute(layoutWinIds.leftbar, 'close!')
   endif
   if a:layoutConfig.rightBarVisibility == 0
-    call win_execute(winlayout.rightbar, 'close!')
+    call win_execute(layoutWinIds.rightbar, 'close!')
   endif
+
+  return layoutWinIds
 endfun
