@@ -159,9 +159,9 @@ default parameters.
 
 ```vim
 let cfg = g:IdeLayoutConfig.new()
-let cfg.panelAlignment("right")   " Align panel to the right (default)
-let cfg.panelVisibility(0)        " Hide panel (default)
-let cfg.panelHeightPct(25)        " Sets the height percentage allocation
+let cfg.panelAlignment = 'right'  " Align panel to the right (default)
+let cfg.panelVisibility = 0       " Hide panel
+let cfg.panelHeightPct = 25       " Sets the height percentage allocation
 
 " Alternatively, all in one shot
 let cfg = g:IdeLayoutConfig.new(#{

@@ -1,7 +1,7 @@
 let s:LayoutConfig = #{
       \ panelAlignment: "right",
       \ panelVisibility: 1,
-      \ panelHeightPct: 15,
+      \ panelHeightPct: 25,
       \ leftBarVisibility: 1,
       \ leftBarWidthPct: 20,
       \ rightBarVisibility: 1,
