@@ -3,6 +3,13 @@ let g:IdeLayouts = s:Layouts
 
 let s:layouts = {}
 
+let s:winlayout = #{
+      \ panel: -1,
+      \ editor: -1,
+      \ leftbar: -1,
+      \ rightbar: -1
+      \ }
+
 fun! s:Layouts.get(layoutid)
   let l:layout = get(s:layouts, a:layoutid, {})
   if len(keys(l:layout))
@@ -66,6 +73,7 @@ fun! s:Layouts.alignLeft(cfg)
   execute("call win_gotoid(win_getid(1)) | set wfw")
   execute("call win_gotoid(win_getid(3)) | set wfh")
   execute("call win_gotoid(win_getid(4)) | set wfw")
+
 endfun
 
 fun! s:Layouts.alignRight(cfg)
@@ -97,6 +105,15 @@ fun! s:Layouts.alignRight(cfg)
   execute("call win_gotoid(win_getid(1)) | set wfw")
   execute("call win_gotoid(win_getid(3)) | set wfw")
   execute("call win_gotoid(win_getid(4)) | set wfh")
+ 
+  " Return a struct having list of matching winid
+  " Useful for processing further
+  let l:res = copy(s:winlayout)
+  let l:res.panel = win_getid(4)
+  let l:res.editor = win_getid(2)
+  let l:res.leftbar = win_getid(1)
+  let l:res.rightbar = win_getid(3)
+  return l:res
 endfun
 
 fun! s:Layouts.alignCenter(cfg)
@@ -161,24 +178,31 @@ endfun
 
 fun! s:Layouts.draw(layoutConfig)
   " Get default placeholder for all windows
-  let l:bufnr = self.getPlaceholderBufnr()
+  let bufnr = self.getPlaceholderBufnr()
 
   " Close all except one and assign it the placeholder
-  if exists("g:A")
-    return
-  endif
-  execute("only! | b!" .. l:bufnr)
-  "let g:A = 1
+  execute("only! | b!" .. bufnr)
 
-  let l:align = a:layoutConfig.panelAlignment
+  let align = a:layoutConfig.panelAlignment
   " Perform the alignment of choice
-  if l:align ==? "left"
+  if align ==? "left"
     call self.alignLeft(a:layoutConfig)
-  elseif l:align ==? "right"
-    call self.alignRight(a:layoutConfig)
-  elseif l:align ==? "center"
+  elseif align ==? "right"
+    let winlayout = self.alignRight(a:layoutConfig)
+  elseif align ==? "center"
     call self.alignCenter(a:layoutConfig)
-  elseif l:align ==? "justify"
+  elseif align ==? "justify"
     call self.alignJustify(a:layoutConfig)
+  endif
+
+  call g:Ide.debug(3, "test", string(winlayout))
+  if a:layoutConfig.panelVisibility == 0
+    call win_execute(winlayout.panel, 'close!')
+  endif
+  if a:layoutConfig.leftBarVisibility == 0
+    call win_execute(winlayout.leftbar, 'close!')
+  endif
+  if a:layoutConfig.rightBarVisibility == 0
+    call win_execute(winlayout.rightbar, 'close!')
   endif
 endfun

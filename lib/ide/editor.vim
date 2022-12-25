@@ -9,6 +9,8 @@ fun! s:Editor.new(layoutid)
   let l:editor = deepcopy(self)
   let l:editor.layoutid = a:layoutid
   let l:editor.bufnr = -1
+  " List of buffers 
+  let l:editor.buffers = []
   return l:editor
 endfun
 

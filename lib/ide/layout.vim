@@ -38,6 +38,9 @@ endfun
 fun! s:Layout.init_(layoutid)
   call g:Ide.debug(3, "Layout.init_",
         \ "Init called for layoutid " .. a:layoutid)
+
+  " initialize panel
+  let self.panel = g:IdePanel.new(a:layoutid)
   return
   let self.map = deepcopy(s:Map)
   let self.bars = []
@@ -147,5 +150,28 @@ endfun
 
 fun! s:Layout.getvar(key, default)
   return get(self.vars_, a:key, a:default)
+endfun
+
+fun! s:Layout.getPanel()
+  return self.panel
+endfun
+
+" This function merely changes the layout's configuration
+" property such as `panelVisibility` to either 1 or 0.
+" This property is then read during the drawing process
+"
+" Ex. Layout.toggleLayoutVisibility('leftBar')
+fun! s:Layout.toggleLayoutVisibility(name)
+  call g:Ide.debug(4, "Layout.toggleLayoutVisibility",
+        \ "Changing layout visibility for " .. a:name)
+  let cfg = self.getConfig()
+  let key = a:name .. "Visibility"
+  if cfg[key] == 1
+    let cfg[key] = 0
+  else
+    let cfg[key] = 1
+  endif
+  call g:Ide.debug(4, "Layout.toggleLayoutVisibility",
+    \ "layoutConfig has been updated to: " .. string(cfg))
 endfun
 

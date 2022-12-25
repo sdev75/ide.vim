@@ -1,30 +1,39 @@
 " widget example
+let s:bufname = "mywidget_buf"
 let s:widget = g:IdeWidget.new('mywidget')
-"
+
+" Widget constructor
+" This is called when constructing the widget
+" Useful for creating buffers or assiging to existing ones
 fun! s:widget.constructor(widget, payload)
-  " abort if getbufnr exists
-  let l:bufnr = g:IdeBuffer.bufnr('example', 'scratch')
-  call bufload(l:bufnr)
-  call setbufline(l:bufnr, 1, ["Widget example"])
-  call setbufvar(l:bufnr, 'number', 0)
-  call setbufvar(l:bufnr, 'list', 0)
-  
-  echom "example widget constructed successfully with bufnr " . l:bufnr
-endfun
-"
-fun! s:widget.open(widget, payload)
-  " get stored layout instance
-  let l:bar = g:Ide.getLayout(a:widget.layoutid)
-        \.getBar(a:widget.barid)
-  let l:bufnr = g:IdeBuffer.getbufnr('example')
-  call win_execute(l:bar.getWinid(), 'sb' . l:bufnr)
-
-  call a:widget.setvar('winid', bufwinid(l:bufnr))
-endfun
-"
-fun! s:widget.close(widget, payload)
-  let l:winid = a:widget.getvar('winid',-1)
-  call win_execute(l:winid, 'close')
+  let l:bufnr = bufnr(s:bufname)
+  if l:bufnr == -1
+    exe 'silent! new'
+    let l:bufnr = bufnr('$')
+    call setbufvar(l:bufnr, '&buflisted', 0)
+    call setbufvar(l:bufnr, '&number', 0)
+    call setbufvar(l:bufnr, '&list', 0)
+    call bufload(l:bufnr)
+    call setbufline(l:bufnr, 1, ["Widget example"])
+    exe 'silent! file ' .. s:bufname
+    call win_execute(bufwinid(l:bufnr), 'close!')
+    
+    call g:Ide.debug(3, "Widget.constructor",
+          \ "Example widget constructed with bufnr" .. l:bufnr)
+    return
+  endif
 endfun
 
-"call g:Ide.registerWidget(s:widget)
+fun! s:widget.update(widget, payload)
+  call g:Ide.debug(3, "widget.update",
+        \ "Example widget update invoked with payload: " ..
+        \ string(a:payload))
+endfun
+
+fun! s:widget.destructor(widget, payload)
+  call g:Ide.debug(3, "widget.destructor",
+        \ "Example widget update invoked with payload: " ..
+        \ string(a:payload))
+endfun
+
+call g:IdeWidgets.register(s:widget)

@@ -1,9 +1,21 @@
 let s:Panel = {}
-let s:IdePanel = s:Panel
+let g:IdePanel = s:Panel
 
-let s:panel = {}
+let s:panel = #{
+      \ tabs: {},
+      \ visibility: -1,
+      \ layoutid: -1,
+      \ }
 
-fun! s:Panel.get()
+fun! s:Panel.new(layoutid)
+  call g:Ide.debug(3, "Layout.new",
+        \ "New layout created with layoutid " .. a:layoutid)
+  let l:panel = deepcopy(s:panel)
+  let l:panel.layoutid = a:layoutid
+  return l:panel
+endfun
+
+fun! s:Panel.get___()
   if len(keys(s:panel))
     call g:Ide.debug(3, "Panel.get",
           \ "Returning existing instance")
@@ -16,10 +28,8 @@ fun! s:Panel.get()
   return s:panel
 endfun
 
-fun! s:Panel.new(layoutid)
-  call g:Ide.debug(3, "Layout.new",
-        \ "New layout created with layoutid " .. a:layoutid)
-  let l:panel = {}
-  let l:panel.alignment = "right"
-  return l:panel
+fun! s:Panel.addTab(id, title, bufnr)
+  
 endfun
+
+let s:PanelTab = #{ id: -1, title: "" }

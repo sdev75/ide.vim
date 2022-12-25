@@ -1,10 +1,10 @@
 let s:LayoutConfig = #{
       \ panelAlignment: "right",
-      \ panelVisibility: 0,
+      \ panelVisibility: 1,
       \ panelHeightPct: 15,
-      \ leftBarVisibility: 0,
+      \ leftBarVisibility: 1,
       \ leftBarWidthPct: 20,
-      \ rightBarVisibility: 0,
+      \ rightBarVisibility: 1,
       \ rightBarWidthPct: 35,
       \ }
 

@@ -140,6 +140,21 @@ fun! s:Ide.runCallback(name, payload)
   endif
 endfun
 
+fun! s:Ide.togglePanel()
+  call self.getLayout().toggleLayoutVisibility('panel')
+  call self.redraw()
+endfun
+
+fun! s:Ide.toggleLeftBar()
+  call self.getLayout().toggleLayoutVisibility('leftBar')
+  call self.redraw()
+endfun
+
+fun! s:Ide.toggleRightBar()
+  call self.getLayout().toggleLayoutVisibility('rightBar')
+  call self.redraw()
+endfun
+
 augroup IdeLib
   au!
   au User OnIdeInit      call s:init(g:IdeAutoDraw)

@@ -25,3 +25,4 @@ augroup Ide
 augroup END
 
 call ide#initCoreFiles()
+call ide#initCommands()

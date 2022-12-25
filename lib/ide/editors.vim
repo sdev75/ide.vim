@@ -18,5 +18,7 @@ fun! s:Editors.get(layoutid)
 
   " Ensure the editor is properly initialized at all times
   call l:editor.init()
+
+  return l:editor
 endfun
 

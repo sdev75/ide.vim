@@ -32,8 +32,11 @@ fun! ide#scriptloaded(type, path)
         \ 'v:val =~ ' . a:type . '/' . a:path . '.vim'))
 endfun
 
-"fun! ide#initCommands()
+fun! ide#initCommands()
+  command! -n=0 IdeTogglePanel call g:Ide.togglePanel()
+  command! -n=0 IdeToggleLeftBar call g:Ide.toggleLeftBar()
+  command! -n=0 IdeToggleRightBar call g:Ide.toggleRightBar()
 "  command! -n=1 IdeToggleBar call g:Ide.toggleBar(<f-args>)
 "  command! -n=0 IdeToggleTerminal call g:Ide.toggleTerminal()
 "  command! -n=0 IdeOpenTerminalAndFocus call g:Ide.openTerminalAndFocus()
-"endfun
+endfun

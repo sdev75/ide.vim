@@ -133,11 +133,23 @@ A layout is composed of a panel, two sidebars and widgets.
 The panel is the component used for displaying logs or running terminal commands
 A panel can be aligned either by `left`, `right`, `center` or `justify`.
 
+A panel can be manually toggled using the following command:
+```vim
+" Source: autoload/ide.vim
+:IdeTogglePanel
+" Alternatively, it can be invoked with the following:
+call g:Ide.togglePanel()
+```
+
+#### Panel Tabs
+The panel might have one or more tabs attached to it. A Tab is a simple virtual collection of widgets sorted using WinBar toolbars. This is useful for example when displaying the terminal, or logs. These tabs can be customized and extended. Ide comes with 2 widgets that can be attached to the panel: terminal and logs.
+
+#### Terminal Widget
+
+This widget is useful for running terminal commands without leaving VIM. It is by default attached to the panel as a widget along with a WinBar tab.
+
 ### Widgets
-A bar and the panel might have one ore more widgets plugged in. 
-Widgets are shared globally but constructed individually 
-for every layout, giving full flexibility.
-An example showing this functionality can be found in the `widget` folder.
+Widgets are merely wrappers that help manage buffers around the IDE. For example, a widget could be created to have a terminal within the panel and one for displaying logs. Another plugin could display a list of files and another one display a specific output that could be duplicated across the ide layout. Widgets can be instantianted at will, and reused accordingly.
 
 ## Layout Configuration
 
@@ -163,6 +175,20 @@ call g:Ide.getLayout().setConfig(cfg)
 " Force layout to be redrawn
 call g:Ide.redraw()
 ```
+### Sidebars
+There are two sidebars, leftBar and rightBar. These can be toggled manually or by providing the setting in the layout's configuration data in the `.vimrc` file.
+
+```vim
+" Toggling the sidebars manually
+:IdeToggleLeftBar
+:IdeToggleRightBar
+
+" Toggling the sidebars using the Ide object
+call g:Ide.toggleLeftBar()
+call g:Ide.toggleRightBar()
+```
+
+It's important to notice that calling the above functions will result in the layout's being redrawn in order to achieve the result desired.
 
 ### Widgets
 Widgets are loaded manually to avoid too much processing.
