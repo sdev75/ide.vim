@@ -1,4 +1,4 @@
-let s:Bar = {}
+"let s:Bar = {}
 "let g:IdeBar = s:Bar
 
 " Left, Bottom, Top, Right
