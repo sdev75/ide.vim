@@ -1,7 +1,7 @@
 let s:Bar = {}
 let g:IdeBar = s:Bar
 
-"" Left, Bottom, Top, Right
+" Left, Bottom, Top, Right
 "let s:Flags = {}
 "let g:IdeBarFlags = s:Flags
 "let s:Flags.VERT = 1
