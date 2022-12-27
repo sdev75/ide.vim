@@ -16,9 +16,9 @@ let g:IdeAutoDraw               = get(g:,'IdeAutoDraw', 1)
 augroup Ide
   au!
   " Perform routine calls during startup, cleanup and resizing
-  au VimEnter    * do User OnIdeInit
-  au VimLeavePre * do User OnIdeShutdown
-  au VimResized  * do User OnIdeResize
+  au VimEnter    *            do User OnIdeInit
+  au QuitPre     *            do User OnIdeShutdown
+  au VimResized  *            do User OnIdeResize
   " Load C library for C and C++ filetypes
   au FileType    c,h          call ide#loadlib('ide/c')
   au FileType    cc,cpp,hpp   call ide#loadlib('ide/cpp')

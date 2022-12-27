@@ -14,12 +14,21 @@ fun! s:Logger.constructor()
     call setbufvar(l:bufnr, "&buflisted", 0)
     call setbufvar(l:bufnr, '&number', 0)
     call setbufvar(l:bufnr, '&list', 0)
+    call setbufvar(l:bufnr, '&readonly', 1)
     exe 'silent! file ' . s:bufname
     call win_execute(bufwinid(l:bufnr), 'close!')
   endif
 
   let s:constructed = 1
   "call win_execute(bufwinid(l:bufnr),'normal! ggdG')
+endfun
+
+fun! s:Logger.destructor()
+  let bufnr = bufnr(s:bufname)
+  if bufnr == -1
+    return
+  endif
+  exe 'bd! ' . bufnr
 endfun
 
 fun! s:Logger.setVerbosityLevel(level)

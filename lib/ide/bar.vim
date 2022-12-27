@@ -1,5 +1,5 @@
 let s:Bar = {}
-"let g:IdeBar = s:Bar
+let g:IdeBar = s:Bar
 
 " Left, Bottom, Top, Right
 "let s:Flags = {}

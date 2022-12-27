@@ -57,7 +57,16 @@ fun! s:shutdown()
   call g:Ide.debug(3, "shutdown", 
         \ "Shutting down IDE")
   let payload = {'event': 'shutdown'}
-  call s:Ide.runCallback("shutdown", l:payload)
+  call s:Ide.runCallback("shutdown", payload)
+
+  " Destruct logger
+  let logger = g:Ide.getLogger()
+  if len(keys(logger))
+    call logger.destructor()
+  endif
+
+  " Force VIM quitting
+  exe 'qa!'
 endfun
 
 " Get instance of a layout
@@ -75,6 +84,11 @@ endfun
 fun! s:redraw()
   let layoutConfig = g:Ide.getLayout().getConfig()
   let layoutWinIds = g:IdeLayouts.draw(layoutConfig)
+
+  " Assign winid to panel
+  let panel = g:Ide.getLayout().getPanel()
+  call panel.setWinId(layoutWinIds.panel)
+  call panel.drawTabs()
 endfun
 
 fun! s:Ide.init()
@@ -91,25 +105,17 @@ fun! s:Ide.setLogger(logger, level = -1)
   endif
 
   let self.logger = a:logger
-  
 endfun
 
-"fun! s:Ide.getRootpath()
-"  return self.rootpath_
-"endfunction
-"
+fun! s:Ide.getLogger()
+  return self.logger
+endfun
+
 "fun! s:Ide.setRootpath(...)
 "  let l:abspath = get(a:, 1, expand("%:p:h"))
 "  let self.rootpath_ = l:abspath
 "endfun
 
-"fun! s:Ide.toggleBar(pos)
-"  let l:layout = self.getLayout()
-"  call l:layout['toggleBar'](a:pos)
-"  " return to previous winid
-"  call win_gotoid(l:layout.getvar('originWinid', -1))
-"endfun
-"
 "fun! s:Ide.toggleTerminal()
 "  let l:layout = self.getLayout()
 "  call l:layout['toggleTerminal'](g:IdeTerminalPos)
