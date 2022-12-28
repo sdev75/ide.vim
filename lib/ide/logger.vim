@@ -10,13 +10,9 @@ fun! s:Logger.constructor()
   let l:bufnr = bufnr(s:bufname)
   if l:bufnr == -1
     exe 'silent! new'
-    let l:bufnr = bufnr('$')
-    call setbufvar(l:bufnr, "&buflisted", 0)
-    call setbufvar(l:bufnr, '&number', 0)
-    call setbufvar(l:bufnr, '&list', 0)
-    call setbufvar(l:bufnr, '&readonly', 1)
+    exe 'set nobuflisted nonumber nolist readonly'
     exe 'silent! file ' . s:bufname
-    call win_execute(bufwinid(l:bufnr), 'close!')
+    exe 'close!'
   endif
 
   let s:constructed = 1
